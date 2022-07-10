@@ -57,7 +57,7 @@ import static com.netflix.discovery.util.DiscoveryBuildInfo.buildVersion;
 /**
  * @author Tomasz Bak
  */
-public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
+public class JerseyEurekaHttpClientFactory implements TransportClientFactory { // 创建 JerseyApplicationClient 的工厂类
 
     public static final String HTTP_X_DISCOVERY_ALLOW_REDIRECT = "X-Discovery-AllowRedirect";
 
@@ -172,9 +172,9 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
     /**
      * Currently use EurekaJerseyClientBuilder. Once old transport in DiscoveryClient is removed, incorporate
      * EurekaJerseyClientBuilder here, and remove it.
-     */
+     */ // 内部类，用于创建 JerseyEurekaHttpClientFactory
     public static class JerseyEurekaHttpClientFactoryBuilder extends EurekaClientFactoryBuilder<JerseyEurekaHttpClientFactory, JerseyEurekaHttpClientFactoryBuilder> {
-
+        // 客户端过滤器
         private Collection<ClientFilter> additionalFilters = Collections.emptyList();
         private boolean experimental = false;
 
@@ -191,10 +191,10 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
         @Override
         public JerseyEurekaHttpClientFactory build() {
             Map<String, String> additionalHeaders = new HashMap<>();
-            if (allowRedirect) {
+            if (allowRedirect) {  // 是否允许重定向
                 additionalHeaders.put(HTTP_X_DISCOVERY_ALLOW_REDIRECT, "true");
             }
-            if (EurekaAccept.compact == eurekaAccept) {
+            if (EurekaAccept.compact == eurekaAccept) { // 是否紧凑的请求的数据结构，{@link EurekaAccept}
                 additionalHeaders.put(EurekaAccept.HTTP_X_EUREKA_ACCEPT, eurekaAccept.name());
             }
 
@@ -203,17 +203,17 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
             }
             return buildLegacy(additionalHeaders, systemSSL);
         }
-
+        // 创建 JerseyEurekaHttpClientFactory。使用 {@link EurekaJerseyClientBuilder} 创建 EurekaJerseyClient，使用高版本的 Apache HttpClient 4.3.4 的 SSL 配置，不使用 Http Proxy
         private JerseyEurekaHttpClientFactory buildLegacy(Map<String, String> additionalHeaders, boolean systemSSL) {
             EurekaJerseyClientBuilder clientBuilder = new EurekaJerseyClientBuilder()
                     .withClientName(clientName)
-                    .withUserAgent("Java-EurekaClient")
-                    .withConnectionTimeout(connectionTimeout)
+                    .withUserAgent("Java-EurekaClient") // UserAgent （不同）
+                    .withConnectionTimeout(connectionTimeout) // 连接时间参数
                     .withReadTimeout(readTimeout)
-                    .withMaxConnectionsPerHost(maxConnectionsPerHost)
+                    .withMaxConnectionsPerHost(maxConnectionsPerHost) // 连接数量参数
                     .withMaxTotalConnections(maxTotalConnections)
                     .withConnectionIdleTimeout((int) connectionIdleTimeout)
-                    .withEncoderWrapper(encoderWrapper)
+                    .withEncoderWrapper(encoderWrapper) // 编解码
                     .withDecoderWrapper(decoderWrapper)
                     .withProxy(proxyHost,String.valueOf(proxyPort),proxyUserName,proxyPassword);
 
@@ -229,35 +229,35 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
 
             EurekaJerseyClient jerseyClient = clientBuilder.build();
             ApacheHttpClient4 discoveryApacheClient = jerseyClient.getClient();
-            addFilters(discoveryApacheClient);
+            addFilters(discoveryApacheClient); // 添加过滤器
 
             return new JerseyEurekaHttpClientFactory(jerseyClient, additionalHeaders);
         }
-
+        // 创建 JerseyEurekaHttpClientFactory
         private JerseyEurekaHttpClientFactory buildExperimental(Map<String, String> additionalHeaders) {
             ThreadSafeClientConnManager cm = createConnectionManager();
             ClientConfig clientConfig = new DefaultApacheHttpClient4Config();
-
+            // Proxy
             if (proxyHost != null) {
                 addProxyConfiguration(clientConfig);
             }
-
+            // 编解码
             DiscoveryJerseyProvider discoveryJerseyProvider = new DiscoveryJerseyProvider(encoderWrapper, decoderWrapper);
             clientConfig.getSingletons().add(discoveryJerseyProvider);
-
+            // 连接数量参数
             // Common properties to all clients
             cm.setDefaultMaxPerRoute(maxConnectionsPerHost);
             cm.setMaxTotal(maxTotalConnections);
             clientConfig.getProperties().put(ApacheHttpClient4Config.PROPERTY_CONNECTION_MANAGER, cm);
-
+            // UserAgent
             String fullUserAgentName = (userAgent == null ? clientName : userAgent) + "/v" + buildVersion();
             clientConfig.getProperties().put(CoreProtocolPNames.USER_AGENT, fullUserAgentName);
-
+            // 禁用重定向
             // To pin a client to specific server in case redirect happens, we handle redirects directly
             // (see DiscoveryClient.makeRemoteCall methods).
             clientConfig.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, Boolean.FALSE);
             clientConfig.getProperties().put(ClientPNames.HANDLE_REDIRECTS, Boolean.FALSE);
-
+            // 添加过滤器
             ApacheHttpClient4 apacheClient = ApacheHttpClient4.create(clientConfig);
             addFilters(apacheClient);
 
@@ -267,7 +267,7 @@ public class JerseyEurekaHttpClientFactory implements TransportClientFactory {
         /**
          * Since Jersey 1.19 depends on legacy apache http-client API, we have to as well.
          */
-        private ThreadSafeClientConnManager createConnectionManager() {
+        private ThreadSafeClientConnManager createConnectionManager() { // 使用低版本的 Apache HttpClient 4.1.1 的 SSL 配置
             try {
                 ThreadSafeClientConnManager connectionManager;
                 if (sslContext != null) {

@@ -26,14 +26,14 @@ import com.netflix.appinfo.InstanceInfo;
  * @param <T> for backward compatibility
 
  */
-public interface LookupService<T> {
+public interface LookupService<T> { // 查找服务接口，提供简单单一的方式获取应用集合(Applications) 和 应用实例信息集合(InstanceInfo)。
 
     /**
      * Returns the corresponding {@link Application} object which is basically a
      * container of all registered <code>appName</code> {@link InstanceInfo}s.
      *
      * @param appName
-     * @return a {@link Application} or null if we couldn't locate any app of
+     * @return a {@link Application} or null if we couldn't loDiscoveryClientcate any app of
      *         the requested appName
      */
     Application getApplication(String appName);

@@ -10,12 +10,12 @@ import com.netflix.discovery.shared.Applications;
  *
  * @author Tomasz Bak
  */
-public interface EurekaHttpClient {
+public interface EurekaHttpClient { // Eureka-Server HTTP 访问客户端，定义了具体的 Eureka-Server API 调用方法
 
     EurekaHttpResponse<Void> register(InstanceInfo info);
 
     EurekaHttpResponse<Void> cancel(String appName, String id);
-
+    // 发起续租请求
     EurekaHttpResponse<InstanceInfo> sendHeartBeat(String appName, String id, InstanceInfo info, InstanceStatus overriddenStatus);
 
     EurekaHttpResponse<Void> statusUpdate(String appName, String id, InstanceStatus newStatus, InstanceInfo info);

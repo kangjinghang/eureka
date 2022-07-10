@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -90,6 +92,7 @@ public class EurekaClientServerRestIntegrationTest {
                 serverCodecs,
                 eurekaServiceUrl
         );
+        Thread.sleep(Long.MAX_VALUE);
     }
 
     @AfterClass
@@ -232,14 +235,22 @@ public class EurekaClientServerRestIntegrationTest {
     }
 
     private static void startServer() throws Exception {
-        File warFile = findWar();
+//        File warFile = findWar();
 
         server = new Server(8080);
 
-        WebAppContext webapp = new WebAppContext();
-        webapp.setContextPath("/");
-        webapp.setWar(warFile.getAbsolutePath());
-        server.setHandler(webapp);
+//        WebAppContext webapp = new WebAppContext();
+//        webapp.setContextPath("/");
+//        webapp.setWar(warFile.getAbsolutePath());
+//        server.setHandler(webapp);
+
+        final Path eurekaServerPath = Paths.get(EurekaClientServerRestIntegrationTest.class.getClassLoader().getResource("").getPath()).getParent().getParent().getParent().getParent();
+
+        WebAppContext webAppCtx = new WebAppContext(eurekaServerPath.resolve("src/main/webapp").toAbsolutePath().toString(), "/");
+        webAppCtx.setDescriptor(eurekaServerPath.resolve("src/main/webapp/WEB-INF/web.xml").toAbsolutePath().toString());
+        webAppCtx.setResourceBase(eurekaServerPath.resolve("src/main/resources").toAbsolutePath().toString());
+        webAppCtx.setClassLoader(Thread.currentThread().getContextClassLoader());
+        server.setHandler(webAppCtx);
 
         server.start();
 

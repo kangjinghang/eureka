@@ -20,7 +20,7 @@ import com.netflix.servo.monitor.MonitorConfig;
  * An auth filter for client requests. For now, it only logs supported client identification data from header info
  */
 @Singleton
-public class ServerRequestAuthFilter implements Filter {
+public class ServerRequestAuthFilter implements Filter { // Eureka-Server 请求认证过滤器。Eureka-Server 未实现认证。目前打印访问的客户端名和版本号，配合 Netflix Servo 实现监控信息采集
     public static final String UNKNOWN = "unknown";
 
     private static final String NAME_PREFIX = "DiscoveryServerRequestAuth_Name_";
@@ -48,7 +48,7 @@ public class ServerRequestAuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        logAuth(request);
+        logAuth(request); // Eureka-Server 未实现认证。目前打印访问的客户端名和版本号
         chain.doFilter(request, response);
     }
 
@@ -56,14 +56,14 @@ public class ServerRequestAuthFilter implements Filter {
     public void destroy() {
         // nothing to do here
     }
-
+    // 打印访问的客户端名和版本号
     protected void logAuth(ServletRequest request) {
         if (serverConfig.shouldLogIdentityHeaders()) {
             if (request instanceof HttpServletRequest) {
                 HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-                String clientName = getHeader(httpRequest, AbstractEurekaIdentity.AUTH_NAME_HEADER_KEY);
-                String clientVersion = getHeader(httpRequest, AbstractEurekaIdentity.AUTH_VERSION_HEADER_KEY);
+                String clientName = getHeader(httpRequest, AbstractEurekaIdentity.AUTH_NAME_HEADER_KEY); // 客户端名
+                String clientVersion = getHeader(httpRequest, AbstractEurekaIdentity.AUTH_VERSION_HEADER_KEY); // 客户端版本号
 
                 DynamicCounter.increment(MonitorConfig.builder(NAME_PREFIX + clientName + "-" + clientVersion).build());
             }

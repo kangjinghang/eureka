@@ -127,7 +127,7 @@ public final class DnsResolver {
      * Looks up the DNS name provided in the JNDI context.
      */
     public static Set<String> getCNamesFromTxtRecord(String discoveryDnsName) throws NamingException {
-        Attributes attrs = getDirContext().getAttributes(discoveryDnsName, new String[]{TXT_RECORD_TYPE});
+        Attributes attrs = getDirContext().getAttributes(discoveryDnsName, new String[]{TXT_RECORD_TYPE}); // 从 DNS 服务器解析 TXT 记录
         Attribute attr = attrs.get(TXT_RECORD_TYPE);
         String txtRecord = null;
         if (attr != null) {
@@ -143,10 +143,10 @@ public final class DnsResolver {
         }
 
         Set<String> cnamesSet = new TreeSet<>();
-        if (txtRecord == null || txtRecord.trim().isEmpty()) {
+        if (txtRecord == null || txtRecord.trim().isEmpty()) { // 记录为空
             return cnamesSet;
         }
-        String[] cnames = txtRecord.split(" ");
+        String[] cnames = txtRecord.split(" "); // 空格分隔
         Collections.addAll(cnamesSet, cnames);
         return cnamesSet;
     }

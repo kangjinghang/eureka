@@ -27,23 +27,23 @@ import static com.netflix.discovery.EurekaClientNames.METRIC_RESOLVER_PREFIX;
  *
  * @author David Liu
  */
-public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver<T> {
+public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver<T> { // 异步执行解析的集群解析器
     private static final Logger logger = LoggerFactory.getLogger(AsyncResolver.class);
 
     // Note that warm up is best effort. If the resolver is accessed by multiple threads pre warmup,
     // only the first thread will block for the warmup (up to the configurable timeout).
     private final AtomicBoolean warmedUp = new AtomicBoolean(false);
-    private final AtomicBoolean scheduled = new AtomicBoolean(false);
+    private final AtomicBoolean scheduled = new AtomicBoolean(false); // 是否已经调度定时任务 {@link #updateTask}
 
     private final String name;    // a name for metric purposes
-    private final ClusterResolver<T> delegate;
-    private final ScheduledExecutorService executorService;
-    private final ThreadPoolExecutor threadPoolExecutor;
-    private final TimedSupervisorTask backgroundTask;
-    private final AtomicReference<List<T>> resultsRef;
+    private final ClusterResolver<T> delegate; // 委托的解析器。目前代码为 {@link ZoneAffinityClusterResolver}
+    private final ScheduledExecutorService executorService; // 定时服务
+    private final ThreadPoolExecutor threadPoolExecutor; // 线程池执行器
+    private final TimedSupervisorTask backgroundTask; // 后台任务。定时解析 EndPoint 集群
+    private final AtomicReference<List<T>> resultsRef; // 解析 EndPoint 集群结果
 
-    private final int refreshIntervalMs;
-    private final int warmUpTimeoutMs;
+    private final int refreshIntervalMs; // 定时解析 EndPoint 集群的频率
+    private final int warmUpTimeoutMs; // 预热超时时间，单位：毫秒
 
     // Metric timestamp, tracking last time when data were effectively changed.
     private volatile long lastLoadTimestamp = -1;
@@ -86,7 +86,7 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
                 0
         );
 
-        warmedUp.set(true);
+        warmedUp.set(true); // 设置已经预热
     }
 
     /**
@@ -106,15 +106,15 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
         this.delegate = delegate;
         this.refreshIntervalMs = refreshIntervalMs;
         this.warmUpTimeoutMs = warmUpTimeoutMs;
-
-        this.executorService = Executors.newScheduledThreadPool(1,
+        // 初始化 定时服务
+        this.executorService = Executors.newScheduledThreadPool(1, // 线程大小=1
                 new ThreadFactoryBuilder()
                         .setNameFormat("AsyncResolver-" + name + "-%d")
                         .setDaemon(true)
                         .build());
-
+        // 初始化 线程池执行器
         this.threadPoolExecutor = new ThreadPoolExecutor(
-                1, executorThreadPoolSize, 0, TimeUnit.SECONDS,
+                1, executorThreadPoolSize, 0, TimeUnit.SECONDS, // 线程大小=1
                 new SynchronousQueue<Runnable>(),  // use direct handoff
                 new ThreadFactoryBuilder()
                         .setNameFormat("AsyncResolver-" + name + "-executor-%d")
@@ -122,7 +122,7 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
                         .build()
         );
 
-        this.backgroundTask = new TimedSupervisorTask(
+        this.backgroundTask = new TimedSupervisorTask( // 初始化 后台任务
                 this.getClass().getSimpleName(),
                 executorService,
                 threadPoolExecutor,
@@ -153,24 +153,24 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
     }
 
     @Override
-    public List<T> getClusterEndpoints() {
+    public List<T> getClusterEndpoints() { // 解析 EndPoint 集群
         long delay = refreshIntervalMs;
-        if (warmedUp.compareAndSet(false, true)) {
+        if (warmedUp.compareAndSet(false, true)) { // 若未预热解析 EndPoint 集群结果，进行预热
             if (!doWarmUp()) {
-                delay = 0;
+                delay = 0;  // 预热失败，取消定时任务的第一次延迟
             }
         }
-        if (scheduled.compareAndSet(false, true)) {
+        if (scheduled.compareAndSet(false, true)) { // 若未调度定时任务，进行调度
             scheduleTask(delay);
         }
-        return resultsRef.get();
+        return resultsRef.get(); // 返回 EndPoint 集群
     }
 
 
     /* visible for testing */ boolean doWarmUp() {
         Future future = null;
         try {
-            future = threadPoolExecutor.submit(updateTask);
+            future = threadPoolExecutor.submit(updateTask); // 解析 EndPoint 集群
             future.get(warmUpTimeoutMs, TimeUnit.MILLISECONDS);  // block until done or timeout
             return true;
         } catch (Exception e) {
@@ -199,12 +199,12 @@ public class AsyncResolver<T extends EurekaEndpoint> implements ClosableResolver
     public long getEndpointsSize() {
         return resultsRef.get().size();  // return directly from the ref and not the method so as to not trigger warming
     }
-
+    // 后台任务，定时解析 EndPoint 集群
     private final Runnable updateTask = new Runnable() {
         @Override
         public void run() {
             try {
-                List<T> newList = delegate.getClusterEndpoints();
+                List<T> newList = delegate.getClusterEndpoints();  // 调用 委托的解析器 解析 EndPoint 集群
                 if (newList != null) {
                     resultsRef.getAndSet(newList);
                     lastLoadTimestamp = System.currentTimeMillis();

@@ -75,16 +75,16 @@ import org.slf4j.LoggerFactory;
  *
  * @author Tomasz Bak
  */
-public class DnsTxtRecordClusterResolver implements ClusterResolver<AwsEndpoint> {
+public class DnsTxtRecordClusterResolver implements ClusterResolver<AwsEndpoint> { // 基于 DNS TXT 记录类型的集群解析器
 
     private static final Logger logger = LoggerFactory.getLogger(DnsTxtRecordClusterResolver.class);
 
-    private final String region;
-    private final String rootClusterDNS;
-    private final boolean extractZoneFromDNS;
-    private final int port;
-    private final boolean isSecure;
-    private final String relativeUri;
+    private final String region; // 地区
+    private final String rootClusterDNS; // 集群根地址，例如 txt.default.eureka.iocoder.cn
+    private final boolean extractZoneFromDNS; // 是否解析可用区(zone)
+    private final int port; // 端口
+    private final boolean isSecure; // 是否安全
+    private final String relativeUri; // 相对地址
 
     /**
      * @param rootClusterDNS top level domain name, in the two level hierarchy (see {@link DnsTxtRecordClusterResolver} documentation).
@@ -117,14 +117,14 @@ public class DnsTxtRecordClusterResolver implements ClusterResolver<AwsEndpoint>
 
     private static List<AwsEndpoint> resolve(String region, String rootClusterDNS, boolean extractZone, int port, boolean isSecure, String relativeUri) {
         try {
-            Set<String> zoneDomainNames = resolve(rootClusterDNS);
+            Set<String> zoneDomainNames = resolve(rootClusterDNS); // 解析 第一层 DNS 记录
             if (zoneDomainNames.isEmpty()) {
                 throw new ClusterResolverException("Cannot resolve Eureka cluster addresses; there are no data in TXT record for DN " + rootClusterDNS);
             }
             List<AwsEndpoint> endpoints = new ArrayList<>();
-            for (String zoneDomain : zoneDomainNames) {
-                String zone = extractZone ? ResolverUtils.extractZoneFromHostName(zoneDomain) : null;
-                Set<String> zoneAddresses = resolve(zoneDomain);
+            for (String zoneDomain : zoneDomainNames) { // 循环第一层 DNS 记录的解析结果，进一步解析第二层 DNS 记录。
+                String zone = extractZone ? ResolverUtils.extractZoneFromHostName(zoneDomain) : null;  // 解析可用区
+                Set<String> zoneAddresses = resolve(zoneDomain); //  解析第二层 DNS 记录
                 for (String address : zoneAddresses) {
                     endpoints.add(new AwsEndpoint(address, port, isSecure, relativeUri, region, zone));
                 }
@@ -134,7 +134,7 @@ public class DnsTxtRecordClusterResolver implements ClusterResolver<AwsEndpoint>
             throw new ClusterResolverException("Cannot resolve Eureka cluster addresses for root: " + rootClusterDNS, e);
         }
     }
-
+    // 解析 第一层 DNS 记录
     private static Set<String> resolve(String rootClusterDNS) throws NamingException {
         Set<String> result;
         try {

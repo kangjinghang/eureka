@@ -13,14 +13,14 @@ import com.netflix.eureka.registry.AbstractInstanceRegistry;
  *
  * Created by Nikos Michalakis on 7/13/16.
  */
-public interface InstanceStatusOverrideRule {
+public interface InstanceStatusOverrideRule { // 应用实例状态覆盖规则接口，匹配 instanceInfo 和 existingLease，找到最终的正确的状态
 
     /**
      * Match this rule.
      *
-     * @param instanceInfo The instance info whose status we care about.
-     * @param existingLease Does the instance have an existing lease already? If so let's consider that.
-     * @param isReplication When overriding consider if we are under a replication mode from other servers.
+     * @param instanceInfo The instance info whose status we care about.  【关注状态】的应用实例对象，和 existingLease 里的应用实例不一定是同一个，通常是请求方的
+     * @param existingLease Does the instance have an existing lease already? If so let's consider that.  已存在的租约
+     * @param isReplication When overriding consider if we are under a replication mode from other servers. 是否是 Eureka-Server 发起的请求
      * @return A result with whether we matched and what we propose the status to be overriden to.
      */
     StatusOverrideResult apply(final InstanceInfo instanceInfo,

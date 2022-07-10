@@ -8,7 +8,7 @@ import com.netflix.eureka.registry.Key;
 /**
  * @author David Liu
  */
-public interface ServerCodecs {
+public interface ServerCodecs { // Eureka-Server 请求和响应编解码器
 
     CodecWrapper getFullJsonCodec();
 

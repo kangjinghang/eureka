@@ -30,7 +30,7 @@ import com.netflix.eureka.registry.AbstractInstanceRegistry;
  *
  * @author Karthik Ranganathan, Greg Kim
  */
-public class Lease<T> {
+public class Lease<T> { // 租约
 
     enum Action {
         Register, Cancel, Renew
@@ -38,17 +38,17 @@ public class Lease<T> {
 
     public static final int DEFAULT_DURATION_IN_SECS = 90;
 
-    private T holder;
-    private long evictionTimestamp;
-    private long registrationTimestamp;
-    private long serviceUpTimestamp;
+    private T holder; // 实体，租约的持有者。在 Eureka-Server 里，暂时只有 InstanceInfo 使用
+    private long evictionTimestamp; // 取消注册时间戳
+    private long registrationTimestamp; // 注册( 创建 )租约时间戳
+    private long serviceUpTimestamp; // 开始服务时间戳
     // Make it volatile so that the expiration task would see this quicker
-    private volatile long lastUpdateTimestamp;
-    private long duration;
+    private volatile long lastUpdateTimestamp; // 最后更新租约时间戳。每次续租时，更新该时间戳
+    private long duration; // 租约持续时长，单位：毫秒。当租约过久未续租，即当前时间 - lastUpdatedTimestamp > duration 时，租约过期。
 
     public Lease(T r, int durationInSecs) {
         holder = r;
-        registrationTimestamp = System.currentTimeMillis();
+        registrationTimestamp = System.currentTimeMillis(); // 租约对象的创建时间戳即为注册租约时间戳。
         lastUpdateTimestamp = registrationTimestamp;
         duration = (durationInSecs * 1000);
 
@@ -59,7 +59,7 @@ public class Lease<T> {
      * associated {@link T} during registration, otherwise default duration is
      * {@link #DEFAULT_DURATION_IN_SECS}.
      */
-    public void renew() {
+    public void renew() { // 设置 租约最后更新时间（续租）
         lastUpdateTimestamp = System.currentTimeMillis() + duration;
 
     }
@@ -67,7 +67,7 @@ public class Lease<T> {
     /**
      * Cancels the lease by updating the eviction time.
      */
-    public void cancel() {
+    public void cancel() {  // 设置 租约的取消注册时间戳
         if (evictionTimestamp <= 0) {
             evictionTimestamp = System.currentTimeMillis();
         }
@@ -78,13 +78,13 @@ public class Lease<T> {
      * subsequent calls will be ignored.
      */
     public void serviceUp() {
-        if (serviceUpTimestamp == 0) {
+        if (serviceUpTimestamp == 0) { // 第一次有效
             serviceUpTimestamp = System.currentTimeMillis();
         }
     }
 
     /**
-     * Set the leases service UP timestamp.
+     * Set the leases service UP timestamp. 设置 开始服务时间戳
      */
     public void setServiceUpTimestamp(long serviceUpTimestamp) {
         this.serviceUpTimestamp = serviceUpTimestamp;
@@ -107,7 +107,7 @@ public class Lease<T> {
      *
      * @param additionalLeaseMs any additional lease time to add to the lease evaluation in ms.
      */
-    public boolean isExpired(long additionalLeaseMs) {
+    public boolean isExpired(long additionalLeaseMs) { // 判断租约是否过期
         return (evictionTimestamp > 0 || System.currentTimeMillis() > (lastUpdateTimestamp + duration + additionalLeaseMs));
     }
 

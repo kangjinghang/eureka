@@ -223,7 +223,7 @@ public class EndpointUtils {
 
     /**
      * Get the list of all eureka service urls from properties file for the eureka client to talk to.
-     *
+     * 获得可用区与 serviceUrls 的映射
      * @param clientConfig the clientConfig to use
      * @param instanceZone The zone in which the client resides
      * @param preferSameZone true if we have to prefer the same zone as the client, false otherwise
@@ -231,21 +231,21 @@ public class EndpointUtils {
      */
     public static Map<String, List<String>> getServiceUrlsMapFromConfig(EurekaClientConfig clientConfig, String instanceZone, boolean preferSameZone) {
         Map<String, List<String>> orderedUrls = new LinkedHashMap<>();
-        String region = getRegion(clientConfig);
+        String region = getRegion(clientConfig); // 获得 应用实例的 地区(region)
         String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion());
         if (availZones == null || availZones.length == 0) {
             availZones = new String[1];
             availZones[0] = DEFAULT_ZONE;
         }
         logger.debug("The availability zone for the given region {} are {}", region, availZones);
-        int myZoneOffset = getZoneOffset(instanceZone, preferSameZone, availZones);
+        int myZoneOffset = getZoneOffset(instanceZone, preferSameZone, availZones); // 获得 开始位置
 
-        String zone = availZones[myZoneOffset];
+        String zone = availZones[myZoneOffset]; // 将 开始位置 的 serviceUrls 添加到结果
         List<String> serviceUrls = clientConfig.getEurekaServerServiceUrls(zone);
         if (serviceUrls != null) {
             orderedUrls.put(zone, serviceUrls);
         }
-        int currentOffset = myZoneOffset == (availZones.length - 1) ? 0 : (myZoneOffset + 1);
+        int currentOffset = myZoneOffset == (availZones.length - 1) ? 0 : (myZoneOffset + 1); // 从开始位置顺序遍历剩余的 serviceUrls 添加到结果
         while (currentOffset != myZoneOffset) {
             zone = availZones[currentOffset];
             serviceUrls = clientConfig.getEurekaServerServiceUrls(zone);
@@ -259,7 +259,7 @@ public class EndpointUtils {
             }
         }
 
-        if (orderedUrls.size() < 1) {
+        if (orderedUrls.size() < 1) { // 为空，报错
             throw new IllegalArgumentException("DiscoveryClient: invalid serviceUrl specified!");
         }
         return orderedUrls;
@@ -367,10 +367,10 @@ public class EndpointUtils {
     }
 
     /**
-     * Gets the zone to pick up for this instance.
-     */
+     * Gets the zone to pick up for this instance.  获得 开始位置
+     */ // 当方法参数 preferSameZone=true ，即 eureka.preferSameZone=true(默认值：true) 时，开始位置为可用区数组(availZones)的第一个和应用实例所在的可用区(myZone)【相等】元素的位置
     private static int getZoneOffset(String myZone, boolean preferSameZone, String[] availZones) {
-        for (int i = 0; i < availZones.length; i++) {
+        for (int i = 0; i < availZones.length; i++) { // 当方法参数 preferSameZone=false ，即 eureka.preferSameZone=false( 默认值：true) 时，开始位置为可用区数组(availZones)的第一个和应用实例所在的可用区(myZone)【不相等】元素的位置
             if (myZone != null && (availZones[i].equalsIgnoreCase(myZone.trim()) == preferSameZone)) {
                 return i;
             }

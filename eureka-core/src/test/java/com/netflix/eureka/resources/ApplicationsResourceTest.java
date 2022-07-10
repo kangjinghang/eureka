@@ -25,7 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ApplicationsResourceTest extends AbstractTester {
     private ApplicationsResource applicationsResource;
     private Applications testApplications;
-
+    // 始化 Eureka-Server 模拟环境
     @Override
     @Before
     public void setUp() throws Exception {

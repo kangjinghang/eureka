@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author Karthik Ranganathan, Greg Kim
  *
  */
-public class PeerEurekaNode {
+public class PeerEurekaNode { // 单个集群节点
 
     /**
      * A time to wait before continuing work if there is network level error.
@@ -100,8 +100,8 @@ public class PeerEurekaNode {
         this.maxProcessingDelayMs = config.getMaxTimeForReplication();
 
         String batcherName = getBatcherName();
-        ReplicationTaskProcessor taskProcessor = new ReplicationTaskProcessor(targetHost, replicationClient);
-        this.batchingDispatcher = TaskDispatchers.createBatchingTaskDispatcher(
+        ReplicationTaskProcessor taskProcessor = new ReplicationTaskProcessor(targetHost, replicationClient); // 初始化 集群复制任务处理器
+        this.batchingDispatcher = TaskDispatchers.createBatchingTaskDispatcher( // 初始化 批量任务分发器
                 batcherName,
                 config.getMaxElementsInPeerReplicationPool(),
                 batchSize,
@@ -111,7 +111,7 @@ public class PeerEurekaNode {
                 retrySleepTimeMs,
                 taskProcessor
         );
-        this.nonBatchingDispatcher = TaskDispatchers.createNonBatchingTaskDispatcher(
+        this.nonBatchingDispatcher = TaskDispatchers.createNonBatchingTaskDispatcher( // 初始化 单任务分发器
                 targetHost,
                 config.getMaxElementsInStatusReplicationPool(),
                 config.getMaxThreadsForStatusReplication(),
@@ -167,7 +167,7 @@ public class PeerEurekaNode {
                     @Override
                     public void handleFailure(int statusCode, Object responseEntity) throws Throwable {
                         super.handleFailure(statusCode, responseEntity);
-                        if (statusCode == 404) {
+                        if (statusCode == 404) { // 当 Eureka-Server 不存在下线的应用实例时，返回 404 状态码，此时打印错误日志
                             logger.warn("{}: missing entry.", getTaskName());
                         }
                     }
@@ -208,17 +208,17 @@ public class PeerEurekaNode {
             @Override
             public void handleFailure(int statusCode, Object responseEntity) throws Throwable {
                 super.handleFailure(statusCode, responseEntity);
-                if (statusCode == 404) {
+                if (statusCode == 404) { // 收到 404 状态码，调用 #register() 方法，向该被心跳同步操作失败的 Eureka-Server 发起注册本地的应用实例的请求
                     logger.warn("{}: missing entry.", getTaskName());
                     if (info != null) {
                         logger.warn("{}: cannot find instance id {} and hence replicating the instance with status {}",
                                 getTaskName(), info.getId(), info.getStatus());
                         register(info);
                     }
-                } else if (config.shouldSyncWhenTimestampDiffers()) {
+                } else if (config.shouldSyncWhenTimestampDiffers()) { // 本地的应用实例的 lastDirtyTimestamp 小于 Eureka-Server 该应用实例的，此时 Eureka-Server 返回 409 状态码。调用 #syncInstancesIfTimestampDiffers() 方法，覆盖注册本地应用实例
                     InstanceInfo peerInstanceInfo = (InstanceInfo) responseEntity;
                     if (peerInstanceInfo != null) {
-                        syncInstancesIfTimestampDiffers(appName, id, info, peerInstanceInfo);
+                        syncInstancesIfTimestampDiffers(appName, id, info, peerInstanceInfo); // 覆盖注册本地应用实例
                     }
                 }
             }
@@ -356,17 +356,17 @@ public class PeerEurekaNode {
      * Synchronize {@link InstanceInfo} information if the timestamp between
      * this node and the peer eureka nodes vary.
      */
-    private void syncInstancesIfTimestampDiffers(String appName, String id, InstanceInfo info, InstanceInfo infoFromPeer) {
+    private void syncInstancesIfTimestampDiffers(String appName, String id, InstanceInfo info, InstanceInfo infoFromPeer) { // 远端应用实例覆盖注册本地应用实例
         try {
             if (infoFromPeer != null) {
                 logger.warn("Peer wants us to take the instance information from it, since the timestamp differs,"
                         + "Id : {} My Timestamp : {}, Peer's timestamp: {}", id, info.getLastDirtyTimestamp(), infoFromPeer.getLastDirtyTimestamp());
-
+                // 存储应用实例的覆盖状态
                 if (infoFromPeer.getOverriddenStatus() != null && !InstanceStatus.UNKNOWN.equals(infoFromPeer.getOverriddenStatus())) {
                     logger.warn("Overridden Status info -id {}, mine {}, peer's {}", id, info.getOverriddenStatus(), infoFromPeer.getOverriddenStatus());
                     registry.storeOverriddenStatusIfRequired(appName, id, infoFromPeer.getOverriddenStatus());
                 }
-                registry.register(infoFromPeer, true);
+                registry.register(infoFromPeer, true); // 向自身注册
             }
         } catch (Throwable e) {
             logger.warn("Exception when trying to set information from peer :", e);
@@ -383,7 +383,7 @@ public class PeerEurekaNode {
         return "target_" + batcherName;
     }
 
-    private static String taskId(String requestType, String appName, String id) {
+    private static String taskId(String requestType, String appName, String id) { // 生成同步操作任务编号
         return requestType + '#' + appName + '/' + id;
     }
 

@@ -24,19 +24,19 @@ import java.util.List;
 /**
  * @author Tomasz Bak
  */
-public class DefaultEndpoint implements EurekaEndpoint {
+public class DefaultEndpoint implements EurekaEndpoint { // 默认 Eureka 服务端点实现类
 
-    protected final String networkAddress;
-    protected final int port;
-    protected final boolean isSecure;
-    protected final String relativeUri;
-    protected final String serviceUrl;
+    protected final String networkAddress; // 网络地址
+    protected final int port; // 端口
+    protected final boolean isSecure; // 是否安全(https)
+    protected final String relativeUri; // 相对地址
+    protected final String serviceUrl; // 完整的服务 URL
 
     public DefaultEndpoint(String serviceUrl) {
         this.serviceUrl = serviceUrl;
 
         try {
-            URL url = new URL(serviceUrl);
+            URL url = new URL(serviceUrl); // 将 serviceUrl 分解成 几个属性
             this.networkAddress = url.getHost();
             this.port = url.getPort();
             this.isSecure = "https".equals(url.getProtocol());
@@ -51,7 +51,7 @@ public class DefaultEndpoint implements EurekaEndpoint {
         this.port = port;
         this.isSecure = isSecure;
         this.relativeUri = relativeUri;
-
+        // 几个属性 拼接成 serviceUrl
         StringBuilder sb = new StringBuilder()
                 .append(isSecure ? "https" : "http")
                 .append("://")
@@ -137,7 +137,7 @@ public class DefaultEndpoint implements EurekaEndpoint {
         result = 31 * result + (serviceUrl != null ? serviceUrl.hashCode() : 0);
         return result;
     }
-
+    // 基于 serviceUrl 属性做比较
     @Override
     public int compareTo(Object that) {
         return serviceUrl.compareTo(((DefaultEndpoint) that).getServiceUrl());

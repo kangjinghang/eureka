@@ -9,10 +9,10 @@ import java.util.List;
 /**
  * @author David Liu
  */
-public class AwsEndpoint extends DefaultEndpoint {
+public class AwsEndpoint extends DefaultEndpoint { // 基于 region、zone 的 Eureka 服务端点实现类
 
-    protected final String zone;
-    protected final String region;
+    protected final String zone; // 可用区
+    protected final String region;  // 区域
 
     public AwsEndpoint(String serviceURI, String region, String zone) {
         super(serviceURI);

@@ -4,7 +4,7 @@ package com.netflix.appinfo;
  * @author Nitesh Kant
  */
 @SuppressWarnings("deprecation")
-public class HealthCheckCallbackToHandlerBridge implements HealthCheckHandler {
+public class HealthCheckCallbackToHandlerBridge implements HealthCheckHandler { // 用于将 HealthCheckCallback 桥接成 HealthCheckHandler
 
     private final HealthCheckCallback callback;
 

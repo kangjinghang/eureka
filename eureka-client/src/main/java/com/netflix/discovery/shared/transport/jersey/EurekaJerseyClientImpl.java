@@ -33,28 +33,28 @@ import static com.netflix.discovery.util.DiscoveryBuildInfo.buildVersion;
 /**
  * @author Tomasz Bak
  */
-public class EurekaJerseyClientImpl implements EurekaJerseyClient {
+public class EurekaJerseyClientImpl implements EurekaJerseyClient { // EurekaJerseyClient 实现类
 
     private static final String PROTOCOL = "https";
     private static final String PROTOCOL_SCHEME = "SSL";
     private static final int HTTPS_PORT = 443;
     private static final String KEYSTORE_TYPE = "JKS";
-
+    // 基于 Apache HttpClient4 实现的 Jersey Client
     private final ApacheHttpClient4 apacheHttpClient;
-    private final ApacheHttpClientConnectionCleaner apacheHttpClientConnectionCleaner;
-
+    private final ApacheHttpClientConnectionCleaner apacheHttpClientConnectionCleaner; // Apache HttpClient 空闲连接清理器
+    // Jersey Client 配置
     ClientConfig jerseyClientConfig;
 
     public EurekaJerseyClientImpl(int connectionTimeout, int readTimeout, final int connectionIdleTimeout,
                                   ClientConfig clientConfig) {
         try {
             jerseyClientConfig = clientConfig;
-            apacheHttpClient = ApacheHttpClient4.create(jerseyClientConfig);
-            HttpParams params = apacheHttpClient.getClientHandler().getHttpClient().getParams();
+            apacheHttpClient = ApacheHttpClient4.create(jerseyClientConfig); // 创建  ApacheHttpClient
+            HttpParams params = apacheHttpClient.getClientHandler().getHttpClient().getParams(); // 设置 连接参数
 
             HttpConnectionParams.setConnectionTimeout(params, connectionTimeout);
             HttpConnectionParams.setSoTimeout(params, readTimeout);
-
+            // 创建 ApacheHttpClientConnectionCleaner
             this.apacheHttpClientConnectionCleaner = new ApacheHttpClientConnectionCleaner(apacheHttpClient, connectionIdleTimeout);
         } catch (Throwable e) {
             throw new RuntimeException("Cannot create Jersey client", e);
@@ -80,7 +80,7 @@ public class EurekaJerseyClientImpl implements EurekaJerseyClient {
             ((MonitoredConnectionManager) connectionManager).shutdown();
         }
     }
-
+    // EurekaJerseyClientImpl 内部类，用于创建 EurekaJerseyClientImpl
     public static class EurekaJerseyClientBuilder {
 
         private boolean systemSSL;
@@ -180,18 +180,18 @@ public class EurekaJerseyClientImpl implements EurekaJerseyClient {
         }
 
         public EurekaJerseyClient build() {
-            MyDefaultApacheHttpClient4Config config = new MyDefaultApacheHttpClient4Config();
+            MyDefaultApacheHttpClient4Config config = new MyDefaultApacheHttpClient4Config(); // 实现自定义配置
             try {
                 return new EurekaJerseyClientImpl(connectionTimeout, readTimeout, connectionIdleTimeout, config);
             } catch (Throwable e) {
                 throw new RuntimeException("Cannot create Jersey client ", e);
             }
         }
-
+        // 实现自定义配置
         class MyDefaultApacheHttpClient4Config extends DefaultApacheHttpClient4Config {
             MyDefaultApacheHttpClient4Config() {
                 MonitoredConnectionManager cm;
-
+                // SSL
                 if (systemSSL) {
                     cm = createSystemSslCM();
                 } else if (sslContext != null || hostnameVerifier != null || trustStoreFileName != null) {
@@ -199,11 +199,11 @@ public class EurekaJerseyClientImpl implements EurekaJerseyClient {
                 } else {
                     cm = createDefaultSslCM();
                 }
-
+                // 自定义 Http Proxy
                 if (proxyHost != null) {
                     addProxyConfiguration(cm);
                 }
-
+                // 自定义的请求、响应的编解码器
                 DiscoveryJerseyProvider discoveryJerseyProvider = new DiscoveryJerseyProvider(encoderWrapper, decoderWrapper);
                 getSingletons().add(discoveryJerseyProvider);
 
@@ -211,10 +211,10 @@ public class EurekaJerseyClientImpl implements EurekaJerseyClient {
                 cm.setDefaultMaxPerRoute(maxConnectionsPerHost);
                 cm.setMaxTotal(maxTotalConnections);
                 getProperties().put(ApacheHttpClient4Config.PROPERTY_CONNECTION_MANAGER, cm);
-
+                // 自定义 UserAgent
                 String fullUserAgentName = (userAgent == null ? clientName : userAgent) + "/v" + buildVersion();
                 getProperties().put(CoreProtocolPNames.USER_AGENT, fullUserAgentName);
-
+                // 禁用重定向
                 // To pin a client to specific server in case redirect happens, we handle redirects directly
                 // (see DiscoveryClient.makeRemoteCall methods).
                 getProperties().put(PROPERTY_FOLLOW_REDIRECTS, Boolean.FALSE);

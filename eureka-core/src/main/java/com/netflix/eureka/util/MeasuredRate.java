@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
  */
 public class MeasuredRate {
     private static final Logger logger = LoggerFactory.getLogger(MeasuredRate.class);
-    private final AtomicLong lastBucket = new AtomicLong(0);
-    private final AtomicLong currentBucket = new AtomicLong(0);
+    private final AtomicLong lastBucket = new AtomicLong(0); // 上一个间隔次数
+    private final AtomicLong currentBucket = new AtomicLong(0); // 当前间隔次数
 
-    private final long sampleInterval;
-    private final Timer timer;
+    private final long sampleInterval; // 间隔
+    private final Timer timer; // 定时器，负责每个 sampleInterval 间隔重置当前次数( currentBucket )，并将原当前次数设置到上一个次数( lastBucket )
 
     private volatile boolean isActive;
 
@@ -75,14 +75,14 @@ public class MeasuredRate {
     /**
      * Returns the count in the last sample interval.
      */
-    public long getCount() {
+    public long getCount() { // 返回上一个次数(lastBucket)
         return lastBucket.get();
     }
 
     /**
      * Increments the count in the current sample interval.
      */
-    public void increment() {
+    public void increment() { // 返回当前次数(currentBucket)
         currentBucket.incrementAndGet();
     }
 }

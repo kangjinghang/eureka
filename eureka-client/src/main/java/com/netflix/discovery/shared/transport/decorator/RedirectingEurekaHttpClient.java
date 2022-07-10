@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Tomasz Bak
  */
-public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
+public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator { // 寻找非 302 重定向的 Eureka-Server 的 EurekaHttpClient
 
     private static final Logger logger = LoggerFactory.getLogger(RedirectingEurekaHttpClient.class);
 
@@ -74,11 +74,11 @@ public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
     @Override
     protected <R> EurekaHttpResponse<R> execute(RequestExecutor<R> requestExecutor) {
         EurekaHttpClient currentEurekaClient = delegateRef.get();
-        if (currentEurekaClient == null) {
-            AtomicReference<EurekaHttpClient> currentEurekaClientRef = new AtomicReference<>(factory.newClient(serviceEndpoint));
-            try {
+        if (currentEurekaClient == null) {  // 未找到非 302 的 Eureka-Server
+            AtomicReference<EurekaHttpClient> currentEurekaClientRef = new AtomicReference<>(factory.newClient(serviceEndpoint)); // 使用初始的 serviceEndpoint (相当于 serviceUrls) 创建委托 EurekaHttpClient
+            try { // 通过执行请求的方式，寻找非 302 状态码返回的 Eureka-Server
                 EurekaHttpResponse<R> response = executeOnNewServer(requestExecutor, currentEurekaClientRef);
-                TransportUtils.shutdown(delegateRef.getAndSet(currentEurekaClientRef.get()));
+                TransportUtils.shutdown(delegateRef.getAndSet(currentEurekaClientRef.get())); // 关闭原有的委托 EurekaHttpClient，并设置当前成功非 302 请求的 EurekaHttpClient
                 return response;
             } catch (Exception e) {
                 logger.info("Request execution error. endpoint={}, exception={} stacktrace={}", serviceEndpoint,
@@ -86,7 +86,7 @@ public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
                 TransportUtils.shutdown(currentEurekaClientRef.get());
                 throw e;
             }
-        } else {
+        } else { // 已经找到非 302 的 Eureka-Server
             try {
                 return requestExecutor.execute(currentEurekaClient);
             } catch (Exception e) {
@@ -113,32 +113,32 @@ public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
             }
         };
     }
-
+    // 通过在原始传递进来的 serviceUrls 执行请求，寻找非 302 状态码返回的 Eureka-Server
     private <R> EurekaHttpResponse<R> executeOnNewServer(RequestExecutor<R> requestExecutor,
                                                          AtomicReference<EurekaHttpClient> currentHttpClientRef) {
         URI targetUrl = null;
-        for (int followRedirectCount = 0; followRedirectCount < MAX_FOLLOWED_REDIRECTS; followRedirectCount++) {
-            EurekaHttpResponse<R> httpResponse = requestExecutor.execute(currentHttpClientRef.get());
-            if (httpResponse.getStatusCode() != 302) {
+        for (int followRedirectCount = 0; followRedirectCount < MAX_FOLLOWED_REDIRECTS; followRedirectCount++) { // 最多重定向 10 次
+            EurekaHttpResponse<R> httpResponse = requestExecutor.execute(currentHttpClientRef.get()); // 使用当前委托的 EurekaHttpClient 发起请求
+            if (httpResponse.getStatusCode() != 302) { // 当返回非 302 状态码时
                 if (followRedirectCount == 0) {
                     logger.debug("Pinning to endpoint {}", targetUrl);
                 } else {
                     logger.info("Pinning to endpoint {}, after {} redirect(s)", targetUrl, followRedirectCount);
                 }
-                return httpResponse;
+                return httpResponse; // 返回，找到了非返回 302 状态码的 Eureka-Server
             }
-
-            targetUrl = getRedirectBaseUri(httpResponse.getLocation());
+            // 当返回 302 状态码
+            targetUrl = getRedirectBaseUri(httpResponse.getLocation()); // 解析重定向 URL
             if (targetUrl == null) {
                 throw new TransportException("Invalid redirect URL " + httpResponse.getLocation());
             }
-
+            // 关闭当前委托的 EurekaHttpClient
             currentHttpClientRef.getAndSet(null).shutdown();
-            currentHttpClientRef.set(factory.newClient(new DefaultEndpoint(targetUrl.toString())));
+            currentHttpClientRef.set(factory.newClient(new DefaultEndpoint(targetUrl.toString()))); // 使用重定向 URL ，创建新的委托 EurekaHttpClient，然后继续循环
         }
         String message = "Follow redirect limit crossed for URI " + serviceEndpoint.getServiceUrl();
         logger.warn(message);
-        throw new TransportException(message);
+        throw new TransportException(message); // 超过重定向上限
     }
 
     private URI getRedirectBaseUri(URI locationURI) {
@@ -148,7 +148,7 @@ public class RedirectingEurekaHttpClient extends EurekaHttpClientDecorator {
         Matcher pathMatcher = REDIRECT_PATH_REGEX.matcher(locationURI.getPath());
         if (pathMatcher.matches()) {
             return UriBuilder.fromUri(locationURI)
-                    .host(dnsService.resolveIp(locationURI.getHost()))
+                    .host(dnsService.resolveIp(locationURI.getHost()))  // 将 host 解析成 ip
                     .replacePath(pathMatcher.group(1))
                     .replaceQuery(null)
                     .build();

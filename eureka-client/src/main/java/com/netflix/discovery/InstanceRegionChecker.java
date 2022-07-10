@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Nitesh Kant
  */
-public class InstanceRegionChecker {
+public class InstanceRegionChecker { // 应用实例信息区域(region)校验
     private static Logger logger = LoggerFactory.getLogger(InstanceRegionChecker.class);
 
     private final AzToRegionMapper azToRegionMapper;
-    private final String localRegion;
+    private final String localRegion; // 本地区域(Region)
 
     InstanceRegionChecker(AzToRegionMapper azToRegionMapper, String localRegion) {
         this.azToRegionMapper = azToRegionMapper;

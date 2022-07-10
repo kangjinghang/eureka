@@ -9,7 +9,7 @@ import javax.net.ssl.SSLContext;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClientConfig;
 import com.netflix.discovery.shared.transport.TransportClientFactory;
-
+// 生成 Jersey 客户端工厂的工厂接口。目前有 Jersey1TransportClientFactories 、Jersey2TransportClientFactories 两个实现
 public interface TransportClientFactories<F> {
     
     @Deprecated
@@ -19,7 +19,7 @@ public interface TransportClientFactories<F> {
     public TransportClientFactory newTransportClientFactory(final EurekaClientConfig clientConfig,
                                                                    final Collection<F> additionalFilters,
                                                                    final InstanceInfo myInstanceInfo);
-    
+    // 创建 registrationClient 和 queryClient 公用的委托的 EurekaHttpClientFactory
     public TransportClientFactory newTransportClientFactory(final EurekaClientConfig clientConfig,
             final Collection<F> additionalFilters,
             final InstanceInfo myInstanceInfo,

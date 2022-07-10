@@ -9,7 +9,7 @@ import com.netflix.eureka.registry.PeerAwareInstanceRegistryImpl.Action;
  *
  * @author Tomasz Bak
  */
-public abstract class InstanceReplicationTask extends ReplicationTask {
+public abstract class InstanceReplicationTask extends ReplicationTask { // 同步应用实例任务抽象类
 
     /**
      * For cancel request there may be no InstanceInfo object available so we need to store app/id pair

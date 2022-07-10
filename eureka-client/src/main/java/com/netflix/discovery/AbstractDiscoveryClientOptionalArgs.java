@@ -21,21 +21,21 @@ import com.netflix.eventbus.spi.EventBus;
 /**
  * <T> The type for client supplied filters (supports jersey1 and jersey2)
  */
-public abstract class AbstractDiscoveryClientOptionalArgs<T> {
-    Provider<HealthCheckCallback> healthCheckCallbackProvider;
-
+public abstract class AbstractDiscoveryClientOptionalArgs<T> { // DiscoveryClient 可选参数抽象基类。该参数是选填参数，实际生产下使用较少
+    Provider<HealthCheckCallback> healthCheckCallbackProvider; // 生成健康检查回调的工厂
+    // 生成健康检查处理器的工厂
     Provider<HealthCheckHandler> healthCheckHandlerProvider;
-
+    // 向 Eureka-Server 注册之前的处理器
     PreRegistrationHandler preRegistrationHandler;
-
+    // Jersey 过滤器集合
     Collection<T> additionalFilters;
-
+    // Jersey 客户端。该参数目前废弃，使用下面 TransportClientFactories 参数来进行生成。
     EurekaJerseyClient eurekaJerseyClient;
-    
+    // 生成 Jersey 客户端的工厂的工厂
     TransportClientFactory transportClientFactory;
     
     TransportClientFactories transportClientFactories;
-
+    // Eureka 事件监听器集合
     private Set<EurekaEventListener> eventListeners;
 
     private Optional<SSLContext> sslContext = Optional.empty();

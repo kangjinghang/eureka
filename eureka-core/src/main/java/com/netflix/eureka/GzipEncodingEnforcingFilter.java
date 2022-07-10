@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Tomasz Bak
  */
 @Singleton
-public class GzipEncodingEnforcingFilter implements Filter {
+public class GzipEncodingEnforcingFilter implements Filter { // GZIP 编码过滤器
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }

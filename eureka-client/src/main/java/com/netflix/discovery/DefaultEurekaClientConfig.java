@@ -58,7 +58,7 @@ import static com.netflix.discovery.PropertyBasedClientConfigConstants.*;
  */
 @Singleton
 @ProvidedBy(DefaultEurekaClientConfigProvider.class)
-public class DefaultEurekaClientConfig implements EurekaClientConfig {
+public class DefaultEurekaClientConfig implements EurekaClientConfig { // 基于配置文件的 Eureka-Client 配置实现类
 
     /**
      * @deprecated 2016-08-29 use {@link com.netflix.discovery.CommonConstants#DEFAULT_CONFIG_NAMESPACE}
@@ -68,21 +68,21 @@ public class DefaultEurekaClientConfig implements EurekaClientConfig {
     public static final String DEFAULT_ZONE = "defaultZone";
     public static final String URL_SEPARATOR = "\\s*,\\s*";
 
-    private final String namespace;
-    private final DynamicPropertyFactory configInstance;
-    private final EurekaTransportConfig transportConfig;
+    private final String namespace; // 命名空间
+    private final DynamicPropertyFactory configInstance; // 配置文件对象
+    private final EurekaTransportConfig transportConfig; // HTTP 传输配置
 
     public DefaultEurekaClientConfig() {
         this(CommonConstants.DEFAULT_CONFIG_NAMESPACE);
     }
 
     public DefaultEurekaClientConfig(String namespace) {
-        this.namespace = namespace.endsWith(".")
+        this.namespace = namespace.endsWith(".") // 设置 namespace，为 "." 结尾
                 ? namespace
                 : namespace + ".";
 
-        this.configInstance = Archaius1Utils.initConfig(CommonConstants.CONFIG_FILE_NAME);
-        this.transportConfig = new DefaultEurekaTransportConfig(namespace, configInstance);
+        this.configInstance = Archaius1Utils.initConfig(CommonConstants.CONFIG_FILE_NAME); // 初始化 配置文件对象
+        this.transportConfig = new DefaultEurekaTransportConfig(namespace, configInstance); // 创建 HTTP 传输配置
     }
 
     /*

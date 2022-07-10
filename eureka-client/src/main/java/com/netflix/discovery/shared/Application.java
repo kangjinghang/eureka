@@ -103,12 +103,12 @@ public class Application {
      * @param i
      *            the instance info object to be added.
      */
-    public void addInstance(InstanceInfo i) {
-        instancesMap.put(i.getId(), i);
+    public void addInstance(InstanceInfo i) { // 添加(ADDED)应用实例时
+        instancesMap.put(i.getId(), i); // 添加到 应用实例映射
         synchronized (instances) {
-            instances.remove(i);
-            instances.add(i);
-            isDirty = true;
+            instances.remove(i); // 移除原有实例
+            instances.add(i); // 添加新实例
+            isDirty = true; // 设置 isDirty ，目前只用于 #toString() 方法打印，无业务逻辑
         }
     }
 
@@ -253,11 +253,11 @@ public class Application {
     }
 
     private void removeInstance(InstanceInfo i, boolean markAsDirty) {
-        instancesMap.remove(i.getId());
+        instancesMap.remove(i.getId()); // 移除 应用实例映射
         synchronized (instances) {
-            instances.remove(i);
+            instances.remove(i); // 移除 应用实例
             if (markAsDirty) {
-                isDirty = true;
+                isDirty = true; // 设置 isDirty ，目前只用于 #toString() 方法打印，无业务逻辑
             }
         }
     }

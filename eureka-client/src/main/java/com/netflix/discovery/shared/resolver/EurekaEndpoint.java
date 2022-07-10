@@ -16,8 +16,8 @@
 
 package com.netflix.discovery.shared.resolver;
 
-public interface EurekaEndpoint extends Comparable<Object> {
-
+public interface EurekaEndpoint extends Comparable<Object> { // Eureka 服务端点接口
+    // 完整的服务 URL
     String getServiceUrl();
 
     /**
@@ -25,13 +25,13 @@ public interface EurekaEndpoint extends Comparable<Object> {
      */
     @Deprecated
     String getHostName();
-
+    // 网络地址 hostname
     String getNetworkAddress();
-
+    // 端口
     int getPort();
-
+    //  是否安全(https)
     boolean isSecure();
-
+    // 相对路径
     String getRelativeUri();
 
 }

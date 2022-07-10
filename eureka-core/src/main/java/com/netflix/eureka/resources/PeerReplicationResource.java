@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  */
 @Path("/{version}/peerreplication")
 @Produces({"application/xml", "application/json"})
-public class PeerReplicationResource {
+public class PeerReplicationResource { // 同步操作任务 Resource (Controller)
 
     private static final Logger logger = LoggerFactory.getLogger(PeerReplicationResource.class);
 
@@ -80,7 +80,7 @@ public class PeerReplicationResource {
     public Response batchReplication(ReplicationList replicationList) {
         try {
             ReplicationListResponse batchResponse = new ReplicationListResponse();
-            for (ReplicationInstance instanceInfo : replicationList.getReplicationList()) {
+            for (ReplicationInstance instanceInfo : replicationList.getReplicationList()) {  // 逐个同步操作任务处理，并将处理结果(ReplicationInstanceResponse) 合并到 ReplicationListResponse
                 try {
                     batchResponse.addResponse(dispatch(instanceInfo));
                 } catch (Exception e) {
@@ -95,9 +95,9 @@ public class PeerReplicationResource {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-
+    // 处理单个同步操作任务，返回处理结果(ReplicationInstanceResponse)
     private ReplicationInstanceResponse dispatch(ReplicationInstance instanceInfo) {
-        ApplicationResource applicationResource = createApplicationResource(instanceInfo);
+        ApplicationResource applicationResource = createApplicationResource(instanceInfo); // 创建 ApplicationResource , InstanceResource 。我们看到，实际该方法是把单个同步操作任务提交到其他 Resource (Controller) 处理，Eureka-Server 收到 Eureka-Client 请求响应的 Resource (Controller) 是相同的逻辑
         InstanceResource resource = createInstanceResource(instanceInfo, applicationResource);
 
         String lastDirtyTimestamp = toString(instanceInfo.getLastDirtyTimestamp());

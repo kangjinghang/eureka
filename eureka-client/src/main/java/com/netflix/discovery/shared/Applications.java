@@ -63,7 +63,7 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 @Serializer("com.netflix.discovery.converters.EntityBodyConverter")
 @XStreamAlias("applications")
 @JsonRootName("applications")
-public class Applications {
+public class Applications { // 注册的应用集合
     private static class VipIndexSupport {
         final AbstractQueue<InstanceInfo> instances = new ConcurrentLinkedQueue<>();
         final AtomicLong roundRobinIndex = new AtomicLong(0);
@@ -80,11 +80,11 @@ public class Applications {
 
     private static final String STATUS_DELIMITER = "_";
 
-    private String appsHashCode;
+    private String appsHashCode; // 应用集合信息一致性 hashcode
     private Long versionDelta;
     @XStreamImplicit
-    private final AbstractQueue<Application> applications;
-    private final Map<String, Application> appNameApplicationMap;
+    private final AbstractQueue<Application> applications; // 应用队列
+    private final Map<String, Application> appNameApplicationMap; // 应用映射。key：应用名
     private final Map<String, VipIndexSupport> virtualHostNameAppMap;
     private final Map<String, VipIndexSupport> secureVirtualHostNameAppMap;
 
@@ -232,8 +232,8 @@ public class Applications {
     @JsonIgnore
     public String getReconcileHashCode() {
         TreeMap<String, AtomicInteger> instanceCountMap = new TreeMap<String, AtomicInteger>();
-        populateInstanceCountMap(instanceCountMap);
-        return getReconcileHashCode(instanceCountMap);
+        populateInstanceCountMap(instanceCountMap); // 计数集合 key：应用实例状态
+        return getReconcileHashCode(instanceCountMap); // 计算 hashcode
     }
 
     /**
@@ -246,7 +246,7 @@ public class Applications {
     public void populateInstanceCountMap(Map<String, AtomicInteger> instanceCountMap) {
         for (Application app : this.getRegisteredApplications()) {
             for (InstanceInfo info : app.getInstancesAsIsFromEureka()) {
-                AtomicInteger instanceCount = instanceCountMap.computeIfAbsent(info.getStatus().name(),
+                AtomicInteger instanceCount = instanceCountMap.computeIfAbsent(info.getStatus().name(), // 计数
                         k -> new AtomicInteger(0));
                 instanceCount.incrementAndGet();
             }
@@ -265,8 +265,8 @@ public class Applications {
     public static String getReconcileHashCode(Map<String, AtomicInteger> instanceCountMap) {
         StringBuilder reconcileHashCode = new StringBuilder(75);
         for (Map.Entry<String, AtomicInteger> mapEntry : instanceCountMap.entrySet()) {
-            reconcileHashCode.append(mapEntry.getKey()).append(STATUS_DELIMITER).append(mapEntry.getValue().get())
-                    .append(STATUS_DELIMITER);
+            reconcileHashCode.append(mapEntry.getKey()).append(STATUS_DELIMITER).append(mapEntry.getValue().get()) // status
+                    .append(STATUS_DELIMITER);  // count
         }
         return reconcileHashCode.toString();
     }
@@ -299,8 +299,8 @@ public class Applications {
         shuffleInstances(clientConfig.shouldFilterOnlyUpInstances(), true, remoteRegionsRegistry, clientConfig,
                 instanceRegionChecker);
     }
-
-    private void shuffleInstances(boolean filterUpInstances, 
+    // 随机打乱应用实例顺序
+    private void shuffleInstances(boolean filterUpInstances,  // 过滤只保留状态为开启(UP)的应用实例
             boolean indexByRemoteRegions,
             @Nullable Map<String, Applications> remoteRegionsRegistry, 
             @Nullable EurekaClientConfig clientConfig,

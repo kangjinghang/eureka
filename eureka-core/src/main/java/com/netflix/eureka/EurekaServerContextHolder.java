@@ -21,8 +21,8 @@ package com.netflix.eureka;
  *
  * @author David Liu
  */
-public class EurekaServerContextHolder {
-
+public class EurekaServerContextHolder { // Eureka-Server 上下文持有者。通过它，可以很方便的获取到 Eureka-Server 上下文
+    // Eureka-Server 上下文
     private final EurekaServerContext serverContext;
 
     private EurekaServerContextHolder(EurekaServerContext serverContext) {
@@ -32,9 +32,9 @@ public class EurekaServerContextHolder {
     public EurekaServerContext getServerContext() {
         return this.serverContext;
     }
-
+    // 持有者
     private static EurekaServerContextHolder holder;
-
+    // 单例模式，首次实例化，传入 Eureka-Server 上下文
     public static synchronized void initialize(EurekaServerContext serverContext) {
         holder = new EurekaServerContextHolder(serverContext);
     }

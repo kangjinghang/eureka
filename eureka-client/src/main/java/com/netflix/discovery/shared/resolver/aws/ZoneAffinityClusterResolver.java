@@ -32,13 +32,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Tomasz Bak
  */
-public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint> {
+public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint> { // 使用可用区亲和的集群解析器
 
     private static final Logger logger = LoggerFactory.getLogger(ZoneAffinityClusterResolver.class);
-
+    // 委托的解析器。目前代码里为 {@link ConfigClusterResolver}
     private final ClusterResolver<AwsEndpoint> delegate;
-    private final String myZone;
-    private final boolean zoneAffinity;
+    private final String myZone; // 应用实例的可用区
+    private final boolean zoneAffinity; // 是否可用区亲和。true ：EndPoint 可用区为本地的优先被放在前面。false ：EndPoint 可用区非本地的优先被放在前面。
     private final EndpointRandomizer randomizer;
 
     /**
@@ -60,14 +60,14 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
     public String getRegion() {
         return delegate.getRegion();
     }
-
+    // 获得 EndPoint 集群
     @Override
     public List<AwsEndpoint> getClusterEndpoints() {
-        List<AwsEndpoint>[] parts = ResolverUtils.splitByZone(delegate.getClusterEndpoints(), myZone);
+        List<AwsEndpoint>[] parts = ResolverUtils.splitByZone(delegate.getClusterEndpoints(), myZone); // 拆分成 本地的可用区和非本地的可用区的 EndPoint 集群
         List<AwsEndpoint> myZoneEndpoints = parts[0];
         List<AwsEndpoint> remainingEndpoints = parts[1];
-        List<AwsEndpoint> randomizedList = randomizeAndMerge(myZoneEndpoints, remainingEndpoints);
-        if (!zoneAffinity) {
+        List<AwsEndpoint> randomizedList = randomizeAndMerge(myZoneEndpoints, remainingEndpoints); // 随机打乱 EndPoint 集群并进行合并
+        if (!zoneAffinity) { // 非可用区亲和，将非本地的可用区的 EndPoint 集群放在前面
             Collections.reverse(randomizedList);
         }
 
@@ -75,16 +75,16 @@ public class ZoneAffinityClusterResolver implements ClusterResolver<AwsEndpoint>
 
         return randomizedList;
     }
-
+    // 随机打乱 EndPoint 集群并进行合并
     private List<AwsEndpoint> randomizeAndMerge(List<AwsEndpoint> myZoneEndpoints, List<AwsEndpoint> remainingEndpoints) {
         if (myZoneEndpoints.isEmpty()) {
-            return randomizer.randomize(remainingEndpoints);
+            return randomizer.randomize(remainingEndpoints);  // 打乱
         }
         if (remainingEndpoints.isEmpty()) {
-            return randomizer.randomize(myZoneEndpoints);
+            return randomizer.randomize(myZoneEndpoints);  // 打乱
         }
-        List<AwsEndpoint> mergedList = randomizer.randomize(myZoneEndpoints);
-        mergedList.addAll(randomizer.randomize(remainingEndpoints));
+        List<AwsEndpoint> mergedList = randomizer.randomize(myZoneEndpoints);  // 打乱
+        mergedList.addAll(randomizer.randomize(remainingEndpoints));  // 打乱
         return mergedList;
     }
 }

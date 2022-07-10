@@ -40,7 +40,7 @@ package com.netflix.appinfo;
  * @author Karthik Ranganathan, Greg Kim
  */
 @Deprecated
-public interface HealthCheckCallback {
+public interface HealthCheckCallback { // 健康检查回调接口，目前已经废弃，使用 HealthCheckHandler 替代，你可以不关注该参数
     /**
      * If false, the instance will be marked
      * {@link InstanceInfo.InstanceStatus#DOWN} with eureka. If the instance was

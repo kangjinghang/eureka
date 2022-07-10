@@ -24,14 +24,14 @@ import com.netflix.eureka.resources.ServerCodecs;
 /**
  * @author David Liu
  */
-public interface EurekaServerContext {
-
+public interface EurekaServerContext { // Eureka-Server 上下文接口，提供 Eureka-Server 内部各组件对象的初始化、关闭、获取等方法。
+    // 各组件对象的初始化
     void initialize() throws Exception;
-
+    // 各组件对象的关闭
     void shutdown() throws Exception;
 
     EurekaServerConfig getServerConfig();
-
+    // 获取 Eureka-Server 集群节点集合
     PeerEurekaNodes getPeerEurekaNodes();
 
     ServerCodecs getServerCodecs();

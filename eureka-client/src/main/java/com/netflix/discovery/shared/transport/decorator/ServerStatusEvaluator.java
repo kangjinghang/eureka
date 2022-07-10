@@ -28,5 +28,5 @@ import com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorato
  * @author Tomasz Bak
  */
 public interface ServerStatusEvaluator {
-    boolean accept(int statusCode, RequestType requestType);
+    boolean accept(int statusCode, RequestType requestType); // 判断响应状态码和请求类型是否能够接受
 }

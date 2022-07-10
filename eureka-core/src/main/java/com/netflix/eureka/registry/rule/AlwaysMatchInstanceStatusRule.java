@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  *
  * Created by Nikos Michalakis on 7/13/16.
  */
-public class AlwaysMatchInstanceStatusRule implements InstanceStatusOverrideRule {
+public class AlwaysMatchInstanceStatusRule implements InstanceStatusOverrideRule { // 总是匹配关注状态的实例对象(instanceInfo)的状态
     private static final Logger logger = LoggerFactory.getLogger(AlwaysMatchInstanceStatusRule.class);
 
     @Override
@@ -19,7 +19,7 @@ public class AlwaysMatchInstanceStatusRule implements InstanceStatusOverrideRule
                                       boolean isReplication) {
         logger.debug("Returning the default instance status {} for instance {}", instanceInfo.getStatus(),
                 instanceInfo.getId());
-        return StatusOverrideResult.matchingStatus(instanceInfo.getStatus());
+        return StatusOverrideResult.matchingStatus(instanceInfo.getStatus());  // 总是匹配关注状态的实例对象(instanceInfo)的状态
     }
 
     @Override

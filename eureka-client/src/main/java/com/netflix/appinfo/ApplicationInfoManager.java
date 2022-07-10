@@ -45,23 +45,23 @@ import org.slf4j.LoggerFactory;
  *
  */
 @Singleton
-public class ApplicationInfoManager {
+public class ApplicationInfoManager { // 应用信息管理器
     private static final Logger logger = LoggerFactory.getLogger(ApplicationInfoManager.class);
-
+    // 默认情况下，使用 NO_OP_MAPPER
     private static final InstanceStatusMapper NO_OP_MAPPER = new InstanceStatusMapper() {
         @Override
         public InstanceStatus map(InstanceStatus prev) {
             return prev;
         }
     };
-
+    // 单例
     private static ApplicationInfoManager instance = new ApplicationInfoManager(null, null, null);
-
+    // 状态变更监听器
     protected final Map<String, StatusChangeListener> listeners;
-    private final InstanceStatusMapper instanceStatusMapper;
-
+    private final InstanceStatusMapper instanceStatusMapper; // 应用实例状态匹配器
+    // 应用实例信息
     private InstanceInfo instanceInfo;
-    private EurekaInstanceConfig config;
+    private EurekaInstanceConfig config; // 应用实例配置
 
     public static class OptionalArgs {
         private InstanceStatusMapper instanceStatusMapper;
@@ -164,7 +164,7 @@ public class ApplicationInfoManager {
      *
      * @param status Status of the instance
      */
-    public synchronized void setInstanceStatus(InstanceStatus status) {
+    public synchronized void setInstanceStatus(InstanceStatus status) { // 设置应用实例信息的状态，从而通知 InstanceInfoReplicator#onDemandUpdate() 方法的调用
         InstanceStatus next = instanceStatusMapper.map(status);
         if (next == null) {
             return;
@@ -197,14 +197,14 @@ public class ApplicationInfoManager {
      *
      * see {@link InstanceInfo#getHostName()} for explanation on why the hostname is used as the default address
      */
-    public void refreshDataCenterInfoIfRequired() {
-        String existingAddress = instanceInfo.getHostName();
+    public void refreshDataCenterInfoIfRequired() { // 刷新 数据中心 相关信息，关注应用实例信息的 hostName 、 ipAddr 、 dataCenterInfo 属性的变化
+        String existingAddress = instanceInfo.getHostName(); // hostname
 
         String existingSpotInstanceAction = null;
         if (instanceInfo.getDataCenterInfo() instanceof AmazonInfo) {
             existingSpotInstanceAction = ((AmazonInfo) instanceInfo.getDataCenterInfo()).get(AmazonInfo.MetaDataKey.spotInstanceAction);
         }
-
+        // 一般情况下，我们使用的是非 RefreshableInstanceConfig 实现的配置类( 一般是 MyDataCenterInstanceConfig )，因为 AbstractInstanceConfig.hostInfo 是静态属性，即使本机修改了 IP 等信息，Eureka-Client 进程也不会感知到
         String newAddress;
         if (config instanceof RefreshableInstanceConfig) {
             // Refresh data center info, and return up to date address
@@ -212,7 +212,7 @@ public class ApplicationInfoManager {
         } else {
             newAddress = config.getHostName(true);
         }
-        String newIp = config.getIpAddress();
+        String newIp = config.getIpAddress(); // ip
 
         if (newAddress != null && !newAddress.equals(existingAddress)) {
             logger.warn("The address changed from : {} => {}", existingAddress, newAddress);
@@ -244,36 +244,36 @@ public class ApplicationInfoManager {
         builder.setDataCenterInfo(config.getDataCenterInfo());
         instanceInfo.setIsDirty();
     }
-
+    // 刷新 租约信息
     public void refreshLeaseInfoIfRequired() {
         LeaseInfo leaseInfo = instanceInfo.getLeaseInfo();
         if (leaseInfo == null) {
             return;
         }
-        int currentLeaseDuration = config.getLeaseExpirationDurationInSeconds();
-        int currentLeaseRenewal = config.getLeaseRenewalIntervalInSeconds();
-        if (leaseInfo.getDurationInSecs() != currentLeaseDuration || leaseInfo.getRenewalIntervalInSecs() != currentLeaseRenewal) {
+        int currentLeaseDuration = config.getLeaseExpirationDurationInSeconds(); // 重新从配置中获取
+        int currentLeaseRenewal = config.getLeaseRenewalIntervalInSeconds(); // 重新从配置中获取
+        if (leaseInfo.getDurationInSecs() != currentLeaseDuration || leaseInfo.getRenewalIntervalInSecs() != currentLeaseRenewal) { // 租约过期时间 改变
             LeaseInfo newLeaseInfo = LeaseInfo.Builder.newBuilder()
                     .setRenewalIntervalInSecs(currentLeaseRenewal)
                     .setDurationInSecs(currentLeaseDuration)
                     .build();
-            instanceInfo.setLeaseInfo(newLeaseInfo);
+            instanceInfo.setLeaseInfo(newLeaseInfo); // 刷新 租约信息
             instanceInfo.setIsDirty();
         }
     }
-
+    // 内部类，状态变更监听器，监听应用实例信息状态的变更。
     public static interface StatusChangeListener {
         String getId();
 
         void notify(StatusChangeEvent statusChangeEvent);
     }
-
+    // 应用实例状态匹配器
     public static interface InstanceStatusMapper {
 
         /**
          * given a starting {@link com.netflix.appinfo.InstanceInfo.InstanceStatus}, apply a mapping to return
          * the follow up status, if applicable.
-         *
+         * 根据传入 pre 参数，转换成对应的应用实例状态
          * @return the mapped instance status, or null if the mapping is not applicable.
          */
         InstanceStatus map(InstanceStatus prev);

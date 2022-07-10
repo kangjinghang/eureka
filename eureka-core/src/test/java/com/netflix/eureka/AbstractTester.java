@@ -40,7 +40,7 @@ import static org.mockito.Mockito.spy;
 /**
  * @author Nitesh Kant
  */
-public class AbstractTester {
+public class AbstractTester { // 测试抽象类
 
     public static final String REMOTE_REGION_NAME = "us-east-1";
     public static final String REMOTE_REGION_APP_NAME = "MYAPP";
@@ -60,7 +60,7 @@ public class AbstractTester {
     protected EurekaServerContext serverContext;
     protected EurekaClient client;
     protected PeerAwareInstanceRegistryImpl registry;
-
+    // 始化 Eureka-Server 模拟环境
     @Before
     public void setUp() throws Exception {
         ConfigurationManager.getConfigInstance().clearProperty("eureka.remoteRegion.global.appWhiteList");
@@ -72,7 +72,7 @@ public class AbstractTester {
         ConfigurationManager.getConfigInstance().setProperty("eureka.evictionIntervalTimerInMs", "10000");
 
         populateRemoteRegistryAtStartup();
-        mockRemoteEurekaServer = newMockRemoteServer();
+        mockRemoteEurekaServer = newMockRemoteServer(); // 模拟 Eureka-Server
         mockRemoteEurekaServer.start();
 
         ConfigurationManager.getConfigInstance().setProperty("eureka.remoteRegionUrlsWithName",

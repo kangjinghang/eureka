@@ -64,17 +64,17 @@ import org.slf4j.LoggerFactory;
  * @author Karthik Ranganathan, Greg Kim, David Liu
  *
  */
-public class EurekaBootStrap implements ServletContextListener {
+public class EurekaBootStrap implements ServletContextListener { // Eureka-Server 启动入口。现了 javax.servlet.ServletContextListener 接口，在 Servlet 容器( 例如 Tomcat、Jetty )启动时，调用 #contextInitialized() 方法，初始化 Eureka-Server
     private static final Logger logger = LoggerFactory.getLogger(EurekaBootStrap.class);
-
+    // 部署环境 - 测服
     private static final String TEST = "test";
 
     private static final String ARCHAIUS_DEPLOYMENT_ENVIRONMENT = "archaius.deployment.environment";
 
     private static final String EUREKA_ENVIRONMENT = "eureka.environment";
-
+    // 部署数据中心 - CLOUD
     private static final String CLOUD = "cloud";
-    private static final String DEFAULT = "default";
+    private static final String DEFAULT = "default"; // 部署数据中心 - 默认
 
     private static final String ARCHAIUS_DEPLOYMENT_DATACENTER = "archaius.deployment.datacenter";
 
@@ -94,7 +94,7 @@ public class EurekaBootStrap implements ServletContextListener {
     
     /**
      * Construct an instance of eureka bootstrap with the supplied eureka client
-     * 
+     * Eureka-Client 也可以通过 EurekaBootStrap 构造方法传递。大多数情况下用不到。
      * @param eurekaClient the eureka client to bootstrap
      */
     public EurekaBootStrap(EurekaClient eurekaClient) {
@@ -110,8 +110,8 @@ public class EurekaBootStrap implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
         try {
-            initEurekaEnvironment();
-            initEurekaServerContext();
+            initEurekaEnvironment(); // 初始化 Eureka-Server 配置环境
+            initEurekaServerContext(); // 初始化 Eureka-Server 上下文
 
             ServletContext sc = event.getServletContext();
             sc.setAttribute(EurekaServerContext.class.getName(), serverContext);
@@ -122,11 +122,11 @@ public class EurekaBootStrap implements ServletContextListener {
     }
 
     /**
-     * Users can override to initialize the environment themselves.
+     * Users can override to initialize the environment themselves. 初始化 Eureka-Server 配置环境
      */
     protected void initEurekaEnvironment() throws Exception {
         logger.info("Setting the eureka configuration..");
-
+        // 设置配置文件的数据中心
         String dataCenter = ConfigurationManager.getConfigInstance().getString(EUREKA_DATACENTER);
         if (dataCenter == null) {
             logger.info("Eureka data center value eureka.datacenter is not set, defaulting to default");
@@ -134,7 +134,7 @@ public class EurekaBootStrap implements ServletContextListener {
         } else {
             ConfigurationManager.getConfigInstance().setProperty(ARCHAIUS_DEPLOYMENT_DATACENTER, dataCenter);
         }
-        String environment = ConfigurationManager.getConfigInstance().getString(EUREKA_ENVIRONMENT);
+        String environment = ConfigurationManager.getConfigInstance().getString(EUREKA_ENVIRONMENT); // 设置配置文件的环境
         if (environment == null) {
             ConfigurationManager.getConfigInstance().setProperty(ARCHAIUS_DEPLOYMENT_ENVIRONMENT, TEST);
             logger.info("Eureka environment value eureka.environment is not set, defaulting to test");
@@ -142,19 +142,19 @@ public class EurekaBootStrap implements ServletContextListener {
     }
 
     /**
-     * init hook for server context. Override for custom logic.
+     * init hook for server context. Override for custom logic. 初始化 Eureka-Server 上下文
      */
     protected void initEurekaServerContext() throws Exception {
-        EurekaServerConfig eurekaServerConfig = new DefaultEurekaServerConfig();
-
+        EurekaServerConfig eurekaServerConfig = new DefaultEurekaServerConfig();  // 【3.2.1】创建 Eureka-Server 配置
+        //【3.2.2】Eureka-Server 请求和响应的数据兼容
         // For backward compatibility
         JsonXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(), XStream.PRIORITY_VERY_HIGH);
         XmlXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(), XStream.PRIORITY_VERY_HIGH);
-
+        // 【3.2.3】创建 Eureka-Server 请求和响应编解码器
         logger.info("Initializing the eureka client...");
         logger.info(eurekaServerConfig.getJsonCodecName());
         ServerCodecs serverCodecs = new DefaultServerCodecs(eurekaServerConfig);
-
+        // 【3.2.4】创建 Eureka-Client
         ApplicationInfoManager applicationInfoManager = null;
 
         if (eurekaClient == null) {
@@ -170,9 +170,9 @@ public class EurekaBootStrap implements ServletContextListener {
         } else {
             applicationInfoManager = eurekaClient.getApplicationInfoManager();
         }
-
+        // 【3.2.5】创建 应用对象信息的注册表
         PeerAwareInstanceRegistry registry;
-        if (isAws(applicationInfoManager.getInfo())) {
+        if (isAws(applicationInfoManager.getInfo())) {  // AWS 相关，跳过
             registry = new AwsInstanceRegistry(
                     eurekaServerConfig,
                     eurekaClient.getEurekaClientConfig(),
@@ -189,7 +189,7 @@ public class EurekaBootStrap implements ServletContextListener {
                     eurekaClient
             );
         }
-
+        // 【3.2.6】创建 Eureka-Server 集群节点集合
         PeerEurekaNodes peerEurekaNodes = getPeerEurekaNodes(
                 registry,
                 eurekaServerConfig,
@@ -197,7 +197,7 @@ public class EurekaBootStrap implements ServletContextListener {
                 serverCodecs,
                 applicationInfoManager
         );
-
+        // 【3.2.7】创建 Eureka-Server 上下文
         serverContext = new DefaultEurekaServerContext(
                 eurekaServerConfig,
                 serverCodecs,
@@ -205,16 +205,16 @@ public class EurekaBootStrap implements ServletContextListener {
                 peerEurekaNodes,
                 applicationInfoManager
         );
-
+        // 【3.2.8】初始化 EurekaServerContextHolder
         EurekaServerContextHolder.initialize(serverContext);
-
+        // 【3.2.9】初始化 Eureka-Server 上下文
         serverContext.initialize();
         logger.info("Initialized server context");
-
+        // 【3.2.10】从其他 Eureka-Server 拉取注册信息
         // Copy registry from neighboring eureka node
-        int registryCount = registry.syncUp();
+        int registryCount = registry.syncUp(); // 【自我保护机制】增加 expectedNumberOfClientsSendingRenews，更新 期望最小每分钟续租次数 numberOfRenewsPerMinThreshold
         registry.openForTraffic(applicationInfoManager, registryCount);
-
+        // 【3.2.11】注册监控
         // Register all monitoring statistics.
         EurekaMonitors.registerAllStats();
     }

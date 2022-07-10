@@ -33,7 +33,7 @@ import com.netflix.discovery.shared.Applications;
  *
  */
 @ImplementedBy(NotImplementedRegistryImpl.class)
-public interface BackupRegistry {
+public interface BackupRegistry { // 备份注册中心接口。当 Eureka-Client 启动时，无法从 Eureka-Server 读取注册信息（可能挂了），从备份注册中心读取注册信息
 
     Applications fetchRegistry();
 

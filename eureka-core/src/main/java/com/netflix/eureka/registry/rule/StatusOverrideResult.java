@@ -8,7 +8,7 @@ import com.netflix.eureka.registry.rule.InstanceStatusOverrideRule;
  *
  * Created by Nikos Michalakis on 7/13/16.
  */
-public class StatusOverrideResult {
+public class StatusOverrideResult { // 状态覆盖结果。当匹配成功，返回 matches = true；否则，返回 matches = false
 
     public static StatusOverrideResult NO_MATCH = new StatusOverrideResult(false, null);
 

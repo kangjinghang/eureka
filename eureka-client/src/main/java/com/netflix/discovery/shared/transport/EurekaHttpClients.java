@@ -47,7 +47,7 @@ public final class EurekaHttpClients {
 
     private EurekaHttpClients() {
     }
-
+    // 创建 queryClient 的 EurekaHttpClientFactory
     public static EurekaHttpClientFactory queryClientFactory(ClusterResolver bootstrapResolver,
                                                              TransportClientFactory transportClientFactory,
                                                              EurekaClientConfig clientConfig,
@@ -63,7 +63,7 @@ public final class EurekaHttpClients {
                 clientConfig, transportConfig, myInstanceInfo, applicationsSource, randomizer);
         return canonicalClientFactory(EurekaClientNames.QUERY, transportConfig, queryResolver, transportClientFactory);
     }
-
+    // 创建 registrationClient 的 EurekaHttpClientFactory
     public static EurekaHttpClientFactory registrationClientFactory(ClusterResolver bootstrapResolver,
                                                                     TransportClientFactory transportClientFactory,
                                                                     EurekaTransportConfig transportConfig) {
@@ -75,16 +75,16 @@ public final class EurekaHttpClients {
                                                           final ClusterResolver<EurekaEndpoint> clusterResolver,
                                                           final TransportClientFactory transportClientFactory) {
 
-        return new EurekaHttpClientFactory() {
+        return new EurekaHttpClientFactory() {  // SessionedEurekaHttpClientFactory
             @Override
             public EurekaHttpClient newClient() {
                 return new SessionedEurekaHttpClient(
                         name,
-                        RetryableEurekaHttpClient.createFactory(
+                        RetryableEurekaHttpClient.createFactory( // RetryableEurekaHttpClient
                                 name,
                                 transportConfig,
                                 clusterResolver,
-                                RedirectingEurekaHttpClient.createFactory(transportClientFactory),
+                                RedirectingEurekaHttpClient.createFactory(transportClientFactory),  // RedirectingEurekaHttpClient
                                 ServerStatusEvaluators.legacyEvaluator()),
                         transportConfig.getSessionedClientReconnectIntervalSeconds() * 1000
                 );
@@ -127,33 +127,33 @@ public final class EurekaHttpClients {
         }
 
         // if all else fails, return the default
-        return defaultBootstrapResolver(clientConfig, myInstanceInfo, randomizer);
+        return defaultBootstrapResolver(clientConfig, myInstanceInfo, randomizer); // 创建默认的解析器 AsyncResolver
     }
 
     /**
      * @return a bootstrap resolver that resolves eureka server endpoints based on either DNS or static config,
      *         depending on configuration for one or the other. This resolver will warm up at the start.
      */
-    static ClosableResolver<AwsEndpoint> defaultBootstrapResolver(final EurekaClientConfig clientConfig,
+    static ClosableResolver<AwsEndpoint> defaultBootstrapResolver(final EurekaClientConfig clientConfig, // 创建默认的解析器 AsyncResolver
                                                                   final InstanceInfo myInstanceInfo,
                                                                   final EndpointRandomizer randomizer) {
-        String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion());
-        String myZone = InstanceInfo.getZone(availZones, myInstanceInfo);
-
+        String[] availZones = clientConfig.getAvailabilityZones(clientConfig.getRegion()); // 获得 可用区集合
+        String myZone = InstanceInfo.getZone(availZones, myInstanceInfo); // 获得 应用实例的 可用区
+        // 创建 ZoneAffinityClusterResolver
         ClusterResolver<AwsEndpoint> delegateResolver = new ZoneAffinityClusterResolver(
                 new ConfigClusterResolver(clientConfig, myInstanceInfo),
                 myZone,
                 true,
                 randomizer
         );
-
+        // 第一次 EndPoint 解析
         List<AwsEndpoint> initialValue = delegateResolver.getClusterEndpoints();
-        if (initialValue.isEmpty()) {
+        if (initialValue.isEmpty()) { // 解析不到 Eureka-Server EndPoint ，快速失败
             String msg = "Initial resolution of Eureka server endpoints failed. Check ConfigClusterResolver logs for more info";
             logger.error(msg);
             failFastOnInitCheck(clientConfig, msg);
         }
-
+        // 创建 AsyncResolver
         return new AsyncResolver<>(
                 EurekaClientNames.BOOTSTRAP,
                 delegateResolver,
@@ -331,7 +331,7 @@ public final class EurekaHttpClients {
     // potential future feature, guarding with experimental flag for now
     private static void failFastOnInitCheck(EurekaClientConfig clientConfig, String msg) {
         if ("true".equals(clientConfig.getExperimental("clientTransportFailFastOnInit"))) {
-            throw new RuntimeException(msg);
+            throw new RuntimeException(msg); // 通过配置(eureka.experimental.clientTransportFailFastOnInit=true)，使 Eureka-Client 初始化失败
         }
     }
 }

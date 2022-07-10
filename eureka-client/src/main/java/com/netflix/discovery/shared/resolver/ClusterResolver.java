@@ -21,9 +21,9 @@ import java.util.List;
 /**
  * @author Tomasz Bak
  */
-public interface ClusterResolver<T extends EurekaEndpoint> {
-
+public interface ClusterResolver<T extends EurekaEndpoint> { // 集群解析器接口
+    // 地区
     String getRegion();
-
+    // EndPoint 集群(数组)
     List<T> getClusterEndpoints();
 }

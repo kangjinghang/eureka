@@ -35,7 +35,7 @@ import com.netflix.appinfo.InstanceInfo.InstanceStatus;
  * its {@link InstanceStatus}.
  */
 @Singleton
-public class StatusFilter implements Filter {
+public class StatusFilter implements Filter { // Eureka-Server 状态过滤器。当 Eureka-Server 未处于开启( InstanceStatus.UP )状态，返回 HTTP 状态码 307 重定向
 
     private static final int SC_TEMPORARY_REDIRECT = 307;
 
@@ -59,7 +59,7 @@ public class StatusFilter implements Filter {
                          FilterChain chain) throws IOException, ServletException {
         InstanceInfo myInfo = ApplicationInfoManager.getInstance().getInfo();
         InstanceStatus status = myInfo.getStatus();
-        if (status != InstanceStatus.UP && response instanceof HttpServletResponse) {
+        if (status != InstanceStatus.UP && response instanceof HttpServletResponse) { // 当 Eureka-Server 未处于开启( InstanceStatus.UP )状态，返回 HTTP 状态码 307 重定向
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.sendError(SC_TEMPORARY_REDIRECT,
                     "Current node is currently not ready to serve requests -- current status: "

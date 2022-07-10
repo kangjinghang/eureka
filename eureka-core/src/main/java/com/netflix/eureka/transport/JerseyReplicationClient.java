@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import static com.netflix.discovery.shared.transport.EurekaHttpResponse.anEurekaHttpResponse;
 
 /**
- * @author Tomasz Bak
+ * @author Tomasz Bak  Eureka-Server 集群内，Eureka-Server 请求 其它的Eureka-Server 的网络通信
  */
 public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient implements HttpReplicationClient {
 
@@ -48,7 +48,7 @@ public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient impl
         this.jerseyClient = jerseyClient;
         this.jerseyApacheClient = jerseyClient.getClient();
     }
-
+    // 添加自定义头 x-netflix-discovery-replication=true
     @Override
     protected void addExtraHeaders(Builder webResource) {
         webResource.header(PeerEurekaNode.HEADER_REPLICATION, "true");
@@ -136,7 +136,7 @@ public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient impl
         super.shutdown();
         jerseyClient.destroyResources();
     }
-
+    // 创建用于 Eureka-Server 集群内，Eureka-Server 请求 其它的Eureka-Server 的网络通信客户端
     public static JerseyReplicationClient createReplicationClient(EurekaServerConfig config, ServerCodecs serverCodecs, String serviceUrl) {
         String name = JerseyReplicationClient.class.getSimpleName() + ": " + serviceUrl + "apps/: ";
 
@@ -144,11 +144,11 @@ public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient impl
         try {
             String hostname;
             try {
-                hostname = new URL(serviceUrl).getHost();
+                hostname = new URL(serviceUrl).getHost(); // 获得 hostname
             } catch (MalformedURLException e) {
                 hostname = serviceUrl;
             }
-
+            // 创建 EurekaJerseyClientBuilder
             String jerseyClientName = "Discovery-PeerNodeClient-" + hostname;
             EurekaJerseyClientBuilder clientBuilder = new EurekaJerseyClientBuilder()
                     .withClientName(jerseyClientName)
@@ -160,29 +160,29 @@ public class JerseyReplicationClient extends AbstractJerseyEurekaHttpClient impl
                     .withMaxConnectionsPerHost(config.getPeerNodeTotalConnectionsPerHost())
                     .withMaxTotalConnections(config.getPeerNodeTotalConnections())
                     .withConnectionIdleTimeout(config.getPeerNodeConnectionIdleTimeoutSeconds());
-
+            // SSL
             if (serviceUrl.startsWith("https://") &&
                     "true".equals(System.getProperty("com.netflix.eureka.shouldSSLConnectionsUseSystemSocketFactory"))) {
                 clientBuilder.withSystemSSLConfiguration();
             }
-            jerseyClient = clientBuilder.build();
+            jerseyClient = clientBuilder.build(); // 创建 EurekaJerseyClient
         } catch (Throwable e) {
             throw new RuntimeException("Cannot Create new Replica Node :" + name, e);
         }
-
+        // 获得 IP
         String ip = null;
         try {
             ip = InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
             logger.warn("Cannot find localhost ip", e);
         }
-
+        // GZIP 过滤器
         ApacheHttpClient4 jerseyApacheClient = jerseyClient.getClient();
         jerseyApacheClient.addFilter(new DynamicGZIPContentEncodingFilter(config));
-
+        // Auth 过滤器
         EurekaServerIdentity identity = new EurekaServerIdentity(ip);
         jerseyApacheClient.addFilter(new EurekaIdentityHeaderFilter(identity));
-
+        // 创建 JerseyReplicationClient
         return new JerseyReplicationClient(jerseyClient, serviceUrl);
     }
 

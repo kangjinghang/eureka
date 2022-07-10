@@ -63,7 +63,7 @@ public class ApplicationsResource {
 
     private final EurekaServerConfig serverConfig;
     private final PeerAwareInstanceRegistry registry;
-    private final ResponseCache responseCache;
+    private final ResponseCache responseCache; // 响应缓存
 
     @Inject
     ApplicationsResource(EurekaServerContext eurekaServer) {
@@ -113,7 +113,7 @@ public class ApplicationsResource {
      * @return a response containing information about all {@link com.netflix.discovery.shared.Applications}
      *         from the {@link AbstractInstanceRegistry}.
      */
-    @GET
+    @GET // 接收全量获取请求
     public Response getContainers(@PathParam("version") String version,
                                   @HeaderParam(HEADER_ACCEPT) String acceptHeader,
                                   @HeaderParam(HEADER_ACCEPT_ENCODING) String acceptEncoding,
@@ -134,22 +134,22 @@ public class ApplicationsResource {
         // Check if the server allows the access to the registry. The server can
         // restrict access if it is not
         // ready to serve traffic depending on various reasons.
-        if (!registry.shouldAllowAccess(isRemoteRegionRequested)) {
+        if (!registry.shouldAllowAccess(isRemoteRegionRequested)) { // 判断是否可以访问
             return Response.status(Status.FORBIDDEN).build();
         }
-        CurrentRequestVersion.set(Version.toEnum(version));
-        KeyType keyType = Key.KeyType.JSON;
+        CurrentRequestVersion.set(Version.toEnum(version)); // API 版本。设置 API 版本号。默认最新 API 版本为 V2
+        KeyType keyType = Key.KeyType.JSON; // 返回数据格式，默认 JSON
         String returnMediaType = MediaType.APPLICATION_JSON;
         if (acceptHeader == null || !acceptHeader.contains(HEADER_JSON_VALUE)) {
             keyType = Key.KeyType.XML;
             returnMediaType = MediaType.APPLICATION_XML;
         }
-
+        // 响应缓存键(KEY)
         Key cacheKey = new Key(Key.EntityType.Application,
                 ResponseCacheImpl.ALL_APPS,
                 keyType, CurrentRequestVersion.get(), EurekaAccept.fromString(eurekaAccept), regions
         );
-
+        // 从响应缓存读取全量注册信息
         Response response;
         if (acceptEncoding != null && acceptEncoding.contains(HEADER_GZIP_VALUE)) {
             response = Response.ok(responseCache.getGZIP(cacheKey))
@@ -194,7 +194,7 @@ public class ApplicationsResource {
      */
     @Path("delta")
     @GET
-    public Response getContainerDifferential(
+    public Response getContainerDifferential( // 增量获取注册信息
             @PathParam("version") String version,
             @HeaderParam(HEADER_ACCEPT) String acceptHeader,
             @HeaderParam(HEADER_ACCEPT_ENCODING) String acceptEncoding,
@@ -202,7 +202,7 @@ public class ApplicationsResource {
             @Context UriInfo uriInfo, @Nullable @QueryParam("regions") String regionsStr) {
 
         boolean isRemoteRegionRequested = null != regionsStr && !regionsStr.isEmpty();
-
+        // 判断是否可以访问
         // If the delta flag is disabled in discovery or if the lease expiration
         // has been disabled, redirect clients to get all instances
         if ((serverConfig.shouldDisableDelta()) || (!registry.shouldAllowAccess(isRemoteRegionRequested))) {
@@ -219,20 +219,20 @@ public class ApplicationsResource {
         }
 
         CurrentRequestVersion.set(Version.toEnum(version));
-        KeyType keyType = Key.KeyType.JSON;
+        KeyType keyType = Key.KeyType.JSON; // 返回数据格式
         String returnMediaType = MediaType.APPLICATION_JSON;
         if (acceptHeader == null || !acceptHeader.contains(HEADER_JSON_VALUE)) {
             keyType = Key.KeyType.XML;
             returnMediaType = MediaType.APPLICATION_XML;
         }
-
+        // 响应缓存键(KEY)
         Key cacheKey = new Key(Key.EntityType.Application,
                 ResponseCacheImpl.ALL_APPS_DELTA,
                 keyType, CurrentRequestVersion.get(), EurekaAccept.fromString(eurekaAccept), regions
         );
 
         final Response response;
-
+        // 响应缓存结果
         if (acceptEncoding != null && acceptEncoding.contains(HEADER_GZIP_VALUE)) {
              response = Response.ok(responseCache.getGZIP(cacheKey))
                     .header(HEADER_CONTENT_ENCODING, HEADER_GZIP_VALUE)

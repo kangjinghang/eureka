@@ -15,8 +15,8 @@ package com.netflix.eureka.util.batcher;
  *
  * @author Tomasz Bak
  */
-public interface TaskDispatcher<ID, T> {
-
+public interface TaskDispatcher<ID, T> { // 任务分发器接口
+    // 提交任务编号，任务，任务过期时间给任务分发器处理
     void process(ID id, T task, long expiryTime);
 
     void shutdown();

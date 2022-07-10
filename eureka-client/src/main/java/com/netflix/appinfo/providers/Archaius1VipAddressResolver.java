@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+// VIP地址解析器
 public class Archaius1VipAddressResolver implements VipAddressResolver {
 
     private static final Logger logger = LoggerFactory.getLogger(Archaius1VipAddressResolver.class);
@@ -20,9 +20,9 @@ public class Archaius1VipAddressResolver implements VipAddressResolver {
         }
 
         String result = vipAddressMacro;
-
+        // 替换表达式
         Matcher matcher = VIP_ATTRIBUTES_PATTERN.matcher(result);
-        while (matcher.find()) {
+        while (matcher.find()) { // 将 VIP地址 里的 ${(.*?)} 查找配置文件里的键值进行替换。例如，${eureka.env}.domain.com，查找配置文件里的键 ${eureka.env} 对应值进行替换
             String key = matcher.group(1);
             String value = DynamicPropertyFactory.getInstance().getStringProperty(key, "").get();
 

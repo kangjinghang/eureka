@@ -7,10 +7,10 @@ import com.netflix.discovery.shared.resolver.EurekaEndpoint;
  *
  * @author David Liu
  */
-public interface TransportClientFactory {
-
+public interface TransportClientFactory { // 创建 EurekaHttpClient 的工厂接口
+    // 创建 EurekaHttpClient
     EurekaHttpClient newClient(EurekaEndpoint serviceUrl);
-
+    // 关闭工厂
     void shutdown();
 
 }

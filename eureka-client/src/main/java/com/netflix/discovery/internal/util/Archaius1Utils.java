@@ -21,16 +21,16 @@ public final class Archaius1Utils {
     private static final String EUREKA_ENVIRONMENT = "eureka.environment";
 
     public static DynamicPropertyFactory initConfig(String configName) {
-
+        // 配置文件对象
         DynamicPropertyFactory configInstance = DynamicPropertyFactory.getInstance();
-        DynamicStringProperty EUREKA_PROPS_FILE = configInstance.getStringProperty("eureka.client.props", configName);
-
+        DynamicStringProperty EUREKA_PROPS_FILE = configInstance.getStringProperty("eureka.client.props", configName); // 配置文件名
+        // 配置文件环境
         String env = ConfigurationManager.getConfigInstance().getString(EUREKA_ENVIRONMENT, "test");
         ConfigurationManager.getConfigInstance().setProperty(ARCHAIUS_DEPLOYMENT_ENVIRONMENT, env);
 
         String eurekaPropsFile = EUREKA_PROPS_FILE.get();
         try {
-            ConfigurationManager.loadCascadedPropertiesFromResources(eurekaPropsFile);
+            ConfigurationManager.loadCascadedPropertiesFromResources(eurekaPropsFile); // 将配置文件加载到环境变量
         } catch (IOException e) {
             logger.warn(
                     "Cannot find the properties specified : {}. This may be okay if there are other environment "

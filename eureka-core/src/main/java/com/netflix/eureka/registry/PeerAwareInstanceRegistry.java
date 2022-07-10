@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * @author Tomasz Bak
  */
-public interface PeerAwareInstanceRegistry extends InstanceRegistry {
+public interface PeerAwareInstanceRegistry extends InstanceRegistry { // 应用实例信息的注册表，提供 Eureka-Server 集群内注册信息的同步服务
 
     void init(PeerEurekaNodes peerEurekaNodes) throws Exception;
 
@@ -35,7 +35,7 @@ public interface PeerAwareInstanceRegistry extends InstanceRegistry {
      * operation fails over to other nodes until the list is exhausted if the
      * communication fails.
      */
-    int syncUp();
+    int syncUp(); // 从其他 Eureka-Server 拉取注册信息
 
     /**
      * Checks to see if the registry access is allowed or the server is in a

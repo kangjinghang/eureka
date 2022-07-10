@@ -51,7 +51,7 @@ public final class ResolverUtils {
      * @return returns two element array with first item containing list of endpoints from client's zone,
      *         and in the second list all the remaining ones
      */
-    public static List<AwsEndpoint>[] splitByZone(List<AwsEndpoint> eurekaEndpoints, String myZone) {
+    public static List<AwsEndpoint>[] splitByZone(List<AwsEndpoint> eurekaEndpoints, String myZone) { // 拆分成 本地的可用区和非本地的可用区的 EndPoint 集群
         if (eurekaEndpoints.isEmpty()) {
             return new List[]{Collections.emptyList(), Collections.emptyList()};
         }

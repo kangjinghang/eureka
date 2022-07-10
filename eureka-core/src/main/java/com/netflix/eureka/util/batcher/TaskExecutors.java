@@ -27,19 +27,19 @@ import static com.netflix.eureka.Names.METRIC_REPLICATION_PREFIX;
  *
  * @author Tomasz Bak
  */
-class TaskExecutors<ID, T> {
+class TaskExecutors<ID, T> { // 任务执行器。其内部提供创建单任务和批量任务执行器的两种方法
 
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutors.class);
 
     private static final Map<String, TaskExecutorMetrics> registeredMonitors = new HashMap<>();
-
+    // 是否关闭
     private final AtomicBoolean isShutdown;
-    private final List<Thread> workerThreads;
+    private final List<Thread> workerThreads; // 工作线程池。工作任务队列会被工作线程池并发拉取，并发执行。
 
     TaskExecutors(WorkerRunnableFactory<ID, T> workerRunnableFactory, int workerCount, AtomicBoolean isShutdown) {
         this.isShutdown = isShutdown;
         this.workerThreads = new ArrayList<>();
-
+        // 创建 工作线程池
         ThreadGroup threadGroup = new ThreadGroup("eurekaTaskExecutors");
         for (int i = 0; i < workerCount; i++) {
             WorkerRunnable<ID, T> runnable = workerRunnableFactory.create(i);
@@ -58,25 +58,25 @@ class TaskExecutors<ID, T> {
             registeredMonitors.forEach(Monitors::unregisterObject);
         }
     }
-
-    static <ID, T> TaskExecutors<ID, T> singleItemExecutors(final String name,
-                                                            int workerCount,
-                                                            final TaskProcessor<T> processor,
-                                                            final AcceptorExecutor<ID, T> acceptorExecutor) {
+    // 创建批量任务执行器，<ID> 任务编号泛型，<T> 任务泛型
+    static <ID, T> TaskExecutors<ID, T> singleItemExecutors(final String name, // 任务执行器名
+                                                            int workerCount, // 任务执行器工作线程数
+                                                            final TaskProcessor<T> processor, // 任务处理器
+                                                            final AcceptorExecutor<ID, T> acceptorExecutor) { // 接收任务执行器
         final AtomicBoolean isShutdown = new AtomicBoolean();
         final TaskExecutorMetrics metrics = new TaskExecutorMetrics(name);
         registeredMonitors.put(name, metrics);
-        return new TaskExecutors<>(idx -> new SingleTaskWorkerRunnable<>("TaskNonBatchingWorker-" + name + '-' + idx, isShutdown, metrics, processor, acceptorExecutor), workerCount, isShutdown);
+        return new TaskExecutors<>(idx -> new SingleTaskWorkerRunnable<>("TaskNonBatchingWorker-" + name + '-' + idx, isShutdown, metrics, processor, acceptorExecutor), workerCount, isShutdown); // 创建单任务执行器
     }
-
-    static <ID, T> TaskExecutors<ID, T> batchExecutors(final String name,
-                                                       int workerCount,
-                                                       final TaskProcessor<T> processor,
-                                                       final AcceptorExecutor<ID, T> acceptorExecutor) {
+    // 创建批量任务执行器，<ID> 任务编号泛型，<T> 任务泛型
+    static <ID, T> TaskExecutors<ID, T> batchExecutors(final String name, // 任务执行器名
+                                                       int workerCount, // 任务执行器工作线程数
+                                                       final TaskProcessor<T> processor, // 任务处理器
+                                                       final AcceptorExecutor<ID, T> acceptorExecutor) { // 接收任务执行器
         final AtomicBoolean isShutdown = new AtomicBoolean();
         final TaskExecutorMetrics metrics = new TaskExecutorMetrics(name);
         registeredMonitors.put(name, metrics);
-        return new TaskExecutors<>(idx -> new BatchWorkerRunnable<>("TaskBatchingWorker-" + name + '-' + idx, isShutdown, metrics, processor, acceptorExecutor), workerCount, isShutdown);
+        return new TaskExecutors<>(idx -> new BatchWorkerRunnable<>("TaskBatchingWorker-" + name + '-' + idx, isShutdown, metrics, processor, acceptorExecutor), workerCount, isShutdown); // 创建批量任务执行器
     }
 
     static class TaskExecutorMetrics {
@@ -140,17 +140,17 @@ class TaskExecutors<ID, T> {
             }
         }
     }
-
+    // 创建工作线程工厂
     interface WorkerRunnableFactory<ID, T> {
         WorkerRunnable<ID, T> create(int idx);
     }
-
+    // 任务工作线程抽象类
     abstract static class WorkerRunnable<ID, T> implements Runnable {
-        final String workerName;
-        final AtomicBoolean isShutdown;
+        final String workerName; // 线程名
+        final AtomicBoolean isShutdown; // 是否关闭
         final TaskExecutorMetrics metrics;
-        final TaskProcessor<T> processor;
-        final AcceptorExecutor<ID, T> taskDispatcher;
+        final TaskProcessor<T> processor; // 任务处理器
+        final AcceptorExecutor<ID, T> taskDispatcher; // 任务接收执行器
 
         WorkerRunnable(String workerName,
                        AtomicBoolean isShutdown,
@@ -168,7 +168,7 @@ class TaskExecutors<ID, T> {
             return workerName;
         }
     }
-
+    // 批量任务工作后台线程任务
     static class BatchWorkerRunnable<ID, T> extends WorkerRunnable<ID, T> {
 
         BatchWorkerRunnable(String workerName,
@@ -182,18 +182,18 @@ class TaskExecutors<ID, T> {
         @Override
         public void run() {
             try {
-                while (!isShutdown.get()) {
-                    List<TaskHolder<ID, T>> holders = getWork();
+                while (!isShutdown.get()) { // 无限循环执行调度，直到关闭
+                    List<TaskHolder<ID, T>> holders = getWork(); // 获取批量任务
                     metrics.registerExpiryTimes(holders);
 
-                    List<T> tasks = getTasksOf(holders);
-                    ProcessingResult result = processor.process(tasks);
+                    List<T> tasks = getTasksOf(holders); // 获得实际批量任务
+                    ProcessingResult result = processor.process(tasks); // 调用处理器执行任务
                     switch (result) {
                         case Success:
                             break;
                         case Congestion:
                         case TransientError:
-                            taskDispatcher.reprocess(holders, result);
+                            taskDispatcher.reprocess(holders, result); // 当任务执行结果为 Congestion 或 TransientError，提交重新处理
                             break;
                         case PermanentError:
                             logger.warn("Discarding {} tasks of {} due to permanent error", holders.size(), workerName);
@@ -207,16 +207,16 @@ class TaskExecutors<ID, T> {
                 logger.warn("Discovery WorkerThread error", e);
             }
         }
-
+        // 获取一个批量任务直到成功
         private List<TaskHolder<ID, T>> getWork() throws InterruptedException {
-            BlockingQueue<List<TaskHolder<ID, T>>> workQueue = taskDispatcher.requestWorkItems();
+            BlockingQueue<List<TaskHolder<ID, T>>> workQueue = taskDispatcher.requestWorkItems(); // 发起请求信号量，并获得批量任务的工作队列
             List<TaskHolder<ID, T>> result;
             do {
-                result = workQueue.poll(1, TimeUnit.SECONDS);
+                result = workQueue.poll(1, TimeUnit.SECONDS); // 【循环】获取批量任务，直到成功
             } while (!isShutdown.get() && result == null);
             return (result == null) ? new ArrayList<>() : result;
         }
-
+        // 获得实际批量任务
         private List<T> getTasksOf(List<TaskHolder<ID, T>> holders) {
             List<T> tasks = new ArrayList<>(holders.size());
             for (TaskHolder<ID, T> holder : holders) {
@@ -225,7 +225,7 @@ class TaskExecutors<ID, T> {
             return tasks;
         }
     }
-
+    // 单任务工作后台线程任务
     static class SingleTaskWorkerRunnable<ID, T> extends WorkerRunnable<ID, T> {
 
         SingleTaskWorkerRunnable(String workerName,
@@ -240,22 +240,22 @@ class TaskExecutors<ID, T> {
         public void run() {
             try {
                 while (!isShutdown.get()) {
-                    BlockingQueue<TaskHolder<ID, T>> workQueue = taskDispatcher.requestWorkItem();
+                    BlockingQueue<TaskHolder<ID, T>> workQueue = taskDispatcher.requestWorkItem(); // 发起请求信号量，并获得单任务的工作队列
                     TaskHolder<ID, T> taskHolder;
-                    while ((taskHolder = workQueue.poll(1, TimeUnit.SECONDS)) == null) {
+                    while ((taskHolder = workQueue.poll(1, TimeUnit.SECONDS)) == null) { // 【循环】获取单任务，直到成功
                         if (isShutdown.get()) {
                             return;
                         }
                     }
                     metrics.registerExpiryTime(taskHolder);
                     if (taskHolder != null) {
-                        ProcessingResult result = processor.process(taskHolder.getTask());
+                        ProcessingResult result = processor.process(taskHolder.getTask()); // 调用处理器执行任务
                         switch (result) {
                             case Success:
                                 break;
                             case Congestion:
                             case TransientError:
-                                taskDispatcher.reprocess(taskHolder, result);
+                                taskDispatcher.reprocess(taskHolder, result); // 提交重新处理
                                 break;
                             case PermanentError:
                                 logger.warn("Discarding a task of {} due to permanent error", workerName);

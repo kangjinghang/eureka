@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 @Serializer("com.netflix.discovery.converters.EntityBodyConverter")
 @XStreamAlias("instance")
 @JsonRootName("instance")
-public class InstanceInfo {
+public class InstanceInfo { // 应用实例信息。Eureka-Client 向 Eureka-Server 注册该对象信息。注册成功后，可以被其他 Eureka-Client 发现。
 
     private static final String VERSION_UNKNOWN = "unknown";
 
@@ -137,7 +137,7 @@ public class InstanceInfo {
     private volatile DataCenterInfo dataCenterInfo;
     private volatile String hostName;
     private volatile InstanceStatus status = InstanceStatus.UP;
-    private volatile InstanceStatus overriddenStatus = InstanceStatus.UNKNOWN;
+    private volatile InstanceStatus overriddenStatus = InstanceStatus.UNKNOWN; // 覆盖状态
     @XStreamOmitField
     private volatile boolean isInstanceInfoDirty = false;
     private volatile LeaseInfo leaseInfo;
@@ -148,7 +148,7 @@ public class InstanceInfo {
     @Auto
     private volatile Long lastUpdatedTimestamp;
     @Auto
-    private volatile Long lastDirtyTimestamp;
+    private volatile Long lastDirtyTimestamp; // 表示应用实例的版本号。当请求方(不仅仅是 Eureka-Client，也可能是同步注册操作的 Eureka-Server) 向 Eureka-Server 发起注册时，若 Eureka-Server 已存在拥有更大 lastDirtyTimestamp 该实例(相同应用并且相同应用实例编号被认为是相同实例)，则请求方注册的应用实例(InstanceInfo) 无法覆盖注册此 Eureka-Server 的该实例
     @Auto
     private volatile ActionType actionType;
     @Auto
@@ -313,13 +313,13 @@ public class InstanceInfo {
         this.version = ii.version;
     }
 
-
+    // 实例状态枚举
     public enum InstanceStatus {
-        UP, // Ready to receive traffic
-        DOWN, // Do not send traffic- healthcheck callback failed
-        STARTING, // Just about starting- initializations to be done - do not
+        UP, // Ready to receive traffic 准备好接收流量了
+        DOWN, // Do not send traffic- healthcheck callback failed 不要发送流量过来，健康检查失败了
+        STARTING, // Just about starting- initializations to be done - do not  正在启动，还没完成，先不要发送流量
         // send traffic
-        OUT_OF_SERVICE, // Intentionally shutdown for traffic
+        OUT_OF_SERVICE, // Intentionally shutdown for traffic 故意关闭流量接收了
         UNKNOWN;
 
         public static InstanceStatus toEnum(String s) {
@@ -336,13 +336,13 @@ public class InstanceInfo {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode() { // 只使用 ID 计算 hashcode
         String id = getId();
         return (id == null) ? 31 : (id.hashCode() + 31);
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(Object obj) { // 只对比 ID
         if (this == obj) {
             return true;
         }
@@ -1169,7 +1169,7 @@ public class InstanceInfo {
         if (this.status != status) {
             InstanceStatus prev = this.status;
             this.status = status;
-            setIsDirty();
+            setIsDirty(); // 设置 应用实例信息 不数据一致
             return prev;
         }
         return null;
@@ -1369,9 +1369,9 @@ public class InstanceInfo {
      *            - The InstanceInfo object of the instance.
      * @return - The zone in which the particular instance belongs to.
      */
-    public static String getZone(String[] availZones, InstanceInfo myInfo) {
+    public static String getZone(String[] availZones, InstanceInfo myInfo) { // 获得应用实例自己所在的可用区
         String instanceZone = ((availZones == null || availZones.length == 0) ? "default"
-                : availZones[0]);
+                : availZones[0]); // 非亚马逊 AWS 环境下，可用区数组的第一个元素就是应用实例自己所在的可用区
         if (myInfo != null
                 && myInfo.getDataCenterInfo().getName() == DataCenterInfo.Name.Amazon) {
 

@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
  *
  * Created by Nikos Michalakis on 7/13/16.
  */
-public class DownOrStartingRule implements InstanceStatusOverrideRule {
+public class DownOrStartingRule implements InstanceStatusOverrideRule { // 匹配 InstanceInfo.InstanceStatus.DOWN 或者 InstanceInfo.InstanceStatus.STARTING 状态
     private static final Logger logger = LoggerFactory.getLogger(DownOrStartingRule.class);
-
+    // 匹配 InstanceInfo.InstanceStatus.DOWN 或者 InstanceInfo.InstanceStatus.STARTING 状态。注意，使用的是 instanceInfo
     @Override
     public StatusOverrideResult apply(InstanceInfo instanceInfo,
                                       Lease<InstanceInfo> existingLease,

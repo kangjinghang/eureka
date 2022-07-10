@@ -12,19 +12,19 @@ import java.util.Map;
  *
  * Created by Nikos Michalakis on 7/13/16.
  */
-public class OverrideExistsRule implements InstanceStatusOverrideRule {
+public class OverrideExistsRule implements InstanceStatusOverrideRule { // 匹配应用实例覆盖状态映射(statusOverrides)
 
     private static final Logger logger = LoggerFactory.getLogger(OverrideExistsRule.class);
-
+    // 应用实例覆盖状态映射。在 PeerAwareInstanceRegistryImpl 里，使用 AbstractInstanceRegistry.overriddenInstanceStatusMap 属性赋值
     private Map<String, InstanceInfo.InstanceStatus> statusOverrides;
 
     public OverrideExistsRule(Map<String, InstanceInfo.InstanceStatus> statusOverrides) {
         this.statusOverrides = statusOverrides;
     }
-
+    // 匹配应用实例覆盖状态映射(statusOverrides)
     @Override
     public StatusOverrideResult apply(InstanceInfo instanceInfo, Lease<InstanceInfo> existingLease, boolean isReplication) {
-        InstanceInfo.InstanceStatus overridden = statusOverrides.get(instanceInfo.getId());
+        InstanceInfo.InstanceStatus overridden = statusOverrides.get(instanceInfo.getId()); // statusOverrides 每次访问刷新有效期，如果调用到 OverrideExistsRule，则会不断刷新
         // If there are instance specific overrides, then they win - otherwise the ASG status
         if (overridden != null) {
             logger.debug("The instance specific override for instance {} and the value is {}",

@@ -7,19 +7,19 @@ import static com.netflix.discovery.shared.transport.PropertyBasedTransportConfi
 /**
  * @author David Liu
  */
-public class DefaultEurekaTransportConfig implements EurekaTransportConfig {
+public class DefaultEurekaTransportConfig implements EurekaTransportConfig { // 基于配置文件的网络传输配置实现类
     private static final String SUB_NAMESPACE = TRANSPORT_CONFIG_SUB_NAMESPACE + ".";
-
+    // 命名空间
     private final String namespace;
-    private final DynamicPropertyFactory configInstance;
+    private final DynamicPropertyFactory configInstance; // 配置文件对象
 
     public DefaultEurekaTransportConfig(String parentNamespace, DynamicPropertyFactory configInstance) {
-        this.namespace = parentNamespace == null
+        this.namespace = parentNamespace == null // 命名空间
                 ? SUB_NAMESPACE
                 : (parentNamespace.endsWith(".")
                     ? parentNamespace + SUB_NAMESPACE
                     : parentNamespace + "." + SUB_NAMESPACE);
-        this.configInstance = configInstance;
+        this.configInstance = configInstance; // 配置文件对象
     }
 
     @Override

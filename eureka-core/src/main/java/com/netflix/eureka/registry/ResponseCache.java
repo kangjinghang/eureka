@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public interface ResponseCache {
 
-    void invalidate(String appName, @Nullable String vipAddress, @Nullable String secureVipAddress);
+    void invalidate(String appName, @Nullable String vipAddress, @Nullable String secureVipAddress); // 过期缓存
 
     AtomicLong getVersionDelta();
 
@@ -26,7 +26,7 @@ public interface ResponseCache {
      * @param key the key for which the cached information needs to be obtained.
      * @return payload which contains information about the applications.
      */
-     String get(Key key);
+     String get(Key key); // 获得缓存
 
     /**
      * Get the compressed information about the applications.
@@ -34,7 +34,7 @@ public interface ResponseCache {
      * @param key the key for which the compressed cached information needs to be obtained.
      * @return compressed payload which contains information about the applications.
      */
-    byte[] getGZIP(Key key);
+    byte[] getGZIP(Key key); // 获得缓存，并 GZIP
 
     /**
      * Performs a shutdown of this cache by stopping internal threads and unregistering

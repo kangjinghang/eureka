@@ -38,14 +38,14 @@ import javax.inject.Singleton;
  * @author David Liu
  */
 @Singleton
-public class DefaultEurekaServerContext implements EurekaServerContext {
+public class DefaultEurekaServerContext implements EurekaServerContext { // 默认 Eureka-Server 上下文实现
     private static final Logger logger = LoggerFactory.getLogger(DefaultEurekaServerContext.class);
-
+    // Eureka-Server 配置
     private final EurekaServerConfig serverConfig;
-    private final ServerCodecs serverCodecs;
-    private final PeerAwareInstanceRegistry registry;
-    private final PeerEurekaNodes peerEurekaNodes;
-    private final ApplicationInfoManager applicationInfoManager;
+    private final ServerCodecs serverCodecs; // Eureka-Server 请求和响应编解码器
+    private final PeerAwareInstanceRegistry registry; // 应用实例信息的注册表
+    private final PeerEurekaNodes peerEurekaNodes; // Eureka-Server 集群节点集合
+    private final ApplicationInfoManager applicationInfoManager; // 应用实例信息管理器
 
     @Inject
     public DefaultEurekaServerContext(EurekaServerConfig serverConfig,
@@ -64,9 +64,9 @@ public class DefaultEurekaServerContext implements EurekaServerContext {
     @Override
     public void initialize() {
         logger.info("Initializing ...");
-        peerEurekaNodes.start();
+        peerEurekaNodes.start(); // 启动 Eureka-Server 集群节点集合（复制）
         try {
-            registry.init(peerEurekaNodes);
+            registry.init(peerEurekaNodes); // 初始化 应用实例信息的注册表
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
